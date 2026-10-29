@@ -92,6 +92,16 @@ class Aula extends Model
         return $this->miembros()->wherePivot('rol', 'alumno')->wherePivot('estado', 'activo');
     }
 
+    public function unidades()
+    {
+        return $this->hasMany(Unidad::class)->orderBy('orden')->orderBy('id');
+    }
+
+    public function clases()
+    {
+        return $this->hasMany(Clase::class)->orderBy('orden')->orderBy('id');
+    }
+
     // ===================== Ayudas =====================
 
     public function getNombreAttribute(): string
@@ -113,5 +123,25 @@ class Aula extends Model
     public function esMiembro(User $user): bool
     {
         return $this->miembros()->where('users.id', $user->id)->wherePivot('estado', 'activo')->exists();
+    }
+
+    /** Titular, co-docente activo o superadmin. */
+    public function puedeEditar(User $user): bool
+    {
+        if ($user->esSuperadmin() || $this->docente_id == $user->id) {
+            return true;
+        }
+
+        return $this->miembros()
+            ->where('users.id', $user->id)
+            ->wherePivot('rol', 'docente')
+            ->wherePivot('estado', 'activo')
+            ->exists();
+    }
+
+    /** Miembro activo o superadmin. */
+    public function puedeVer(User $user): bool
+    {
+        return $user->esSuperadmin() || $this->esMiembro($user);
     }
 }

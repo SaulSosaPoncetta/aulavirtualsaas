@@ -149,3 +149,14 @@ main {
 .btn-check:checked + .selector-color {
     box-shadow: 0 0 0 3px #fff, 0 0 0 5px $pizarra;
 }
+
+// Contenido de clases
+.contenido-clase {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.min-w-0 {
+    min-width: 0;
+}

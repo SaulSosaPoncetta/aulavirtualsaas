@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AulaController;
+use App\Http\Controllers\ClaseController;
+use App\Http\Controllers\RecursoController;
+use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\Auth\CambiarPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarPasswordController;
@@ -39,4 +42,20 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::patch('/aulas/{aula}/codigo/alternar', [AulaController::class, 'alternarCodigo'])->name('aulas.codigo.alternar');
     Route::patch('/aulas/{aula}/miembros/{user}/baja', [AulaController::class, 'bajaMiembro'])->name('aulas.miembros.baja');
     Route::post('/aulas/{aula}/salir', [AulaController::class, 'salir'])->name('aulas.salir');
+
+    // Unidades del aula
+    Route::post('/aulas/{aula}/unidades', [UnidadController::class, 'store'])->name('unidades.store');
+    Route::put('/unidades/{unidad}', [UnidadController::class, 'update'])->name('unidades.update');
+    Route::delete('/unidades/{unidad}', [UnidadController::class, 'destroy'])->name('unidades.destroy');
+    Route::patch('/unidades/{unidad}/mover/{direccion}', [UnidadController::class, 'mover'])
+        ->whereIn('direccion', ['arriba', 'abajo'])->name('unidades.mover');
+
+    // Clases y material
+    Route::get('/aulas/{aula}/clases/crear', [ClaseController::class, 'create'])->name('clases.create');
+    Route::post('/aulas/{aula}/clases', [ClaseController::class, 'store'])->name('clases.store');
+    Route::get('/clases/{clase}', [ClaseController::class, 'show'])->name('clases.show');
+    Route::get('/clases/{clase}/editar', [ClaseController::class, 'edit'])->name('clases.edit');
+    Route::put('/clases/{clase}', [ClaseController::class, 'update'])->name('clases.update');
+    Route::delete('/clases/{clase}', [ClaseController::class, 'destroy'])->name('clases.destroy');
+    Route::get('/recursos/{recurso}/descargar', [RecursoController::class, 'descargar'])->name('recursos.descargar');
 });

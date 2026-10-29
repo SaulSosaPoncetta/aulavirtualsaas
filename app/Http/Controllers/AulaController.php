@@ -80,19 +80,27 @@ class AulaController extends Controller
     public function show(Request $request, Aula $aula)
     {
         $user = $request->user();
-        abort_unless($user->esSuperadmin() || $aula->esMiembro($user), 403);
+        abort_unless($aula->puedeVer($user), 403);
+
+        $puedeEditar = $aula->puedeEditar($user);
 
         $aula->load(['institucion', 'titular']);
+
+        $unidades = $aula->unidades()->get();
+        $clases   = $aula->clases()->with('recursos')->get();
+
+        // Los alumnos solo ven unidades visibles y clases publicadas (filtro en PHP)
+        if (! $puedeEditar) {
+            $unidades = $unidades->where('visible', true)->values();
+            $clases   = $clases->filter(fn ($c) => $c->estaPublicada())->values();
+        }
+
+        $clasesPorUnidad = $clases->groupBy(fn ($c) => $c->unidad_id ?? 0);
 
         $docentes = $aula->docentes()->orderBy('apellido')->orderBy('name')->get();
         $alumnos  = $aula->alumnos()->orderBy('apellido')->orderBy('name')->get();
 
-        return view('aulas.show', [
-            'aula'        => $aula,
-            'docentes'    => $docentes,
-            'alumnos'     => $alumnos,
-            'puedeEditar' => $this->puedeEditar($user, $aula),
-        ]);
+        return view('aulas.show', compact('aula', 'unidades', 'clasesPorUnidad', 'docentes', 'alumnos', 'puedeEditar'));
     }
 
     // ===================== Edición =====================
@@ -254,20 +262,8 @@ class AulaController extends Controller
         abort_unless($user->esDocente() || $user->esSuperadmin(), 403, 'Solo los docentes pueden crear aulas.');
     }
 
-    protected function puedeEditar(User $user, Aula $aula): bool
-    {
-        if ($user->esSuperadmin() || $aula->docente_id == $user->id) {
-            return true;
-        }
-
-        return DB::table('aula_user')
-            ->where('aula_id', $aula->id)->where('user_id', $user->id)
-            ->where('rol', 'docente')->where('estado', 'activo')
-            ->exists();
-    }
-
     protected function autorizarEdicion(User $user, Aula $aula): void
     {
-        abort_unless($this->puedeEditar($user, $aula), 403);
+        abort_unless($aula->puedeEditar($user), 403);
     }
 }
