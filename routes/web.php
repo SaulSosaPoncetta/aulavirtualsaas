@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
+use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\RecursoController;
+use App\Http\Controllers\TareaController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\Auth\CambiarPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -58,4 +61,20 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::put('/clases/{clase}', [ClaseController::class, 'update'])->name('clases.update');
     Route::delete('/clases/{clase}', [ClaseController::class, 'destroy'])->name('clases.destroy');
     Route::get('/recursos/{recurso}/descargar', [RecursoController::class, 'descargar'])->name('recursos.descargar');
+
+    // Tareas
+    Route::get('/aulas/{aula}/tareas/crear', [TareaController::class, 'create'])->name('tareas.create');
+    Route::post('/aulas/{aula}/tareas', [TareaController::class, 'store'])->name('tareas.store');
+    Route::get('/tareas/{tarea}', [TareaController::class, 'show'])->name('tareas.show');
+    Route::get('/tareas/{tarea}/editar', [TareaController::class, 'edit'])->name('tareas.edit');
+    Route::put('/tareas/{tarea}', [TareaController::class, 'update'])->name('tareas.update');
+    Route::delete('/tareas/{tarea}', [TareaController::class, 'destroy'])->name('tareas.destroy');
+
+    // Entregas
+    Route::post('/tareas/{tarea}/entrega', [EntregaController::class, 'guardar'])->middleware('throttle:20,1')->name('entregas.guardar');
+    Route::get('/entregas/{entrega}', [EntregaController::class, 'show'])->name('entregas.show');
+    Route::patch('/entregas/{entrega}/corregir', [EntregaController::class, 'corregir'])->name('entregas.corregir');
+
+    // Archivos de tareas y entregas
+    Route::get('/archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])->name('archivos.descargar');
 });

@@ -70,6 +70,9 @@
                     <a href="{{ route('clases.create', $aula) }}" class="btn btn-primary">
                         <i class="bi bi-plus-lg me-1"></i> Nueva clase
                     </a>
+                    <a href="{{ route('tareas.create', $aula) }}" class="btn btn-primary">
+                        <i class="bi bi-clipboard-plus me-1"></i> Nueva tarea
+                    </a>
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalUnidad"
                             data-accion="{{ route('unidades.store', $aula) }}" data-metodo="POST" data-titulo="" data-descripcion="" data-visible="1">
                         <i class="bi bi-folder-plus me-1"></i> Nueva unidad
@@ -78,8 +81,9 @@
             @endif
 
             @php
-                $general = $clasesPorUnidad->get(0, collect());
-                $hayContenido = $unidades->isNotEmpty() || $general->isNotEmpty();
+                $general       = $clasesPorUnidad->get(0, collect());
+                $generalTareas = $tareasPorUnidad->get(0, collect());
+                $hayContenido  = $unidades->isNotEmpty() || $general->isNotEmpty() || $generalTareas->isNotEmpty();
             @endphp
 
             @unless ($hayContenido)
@@ -98,12 +102,15 @@
             @endunless
 
             {{-- Clases sin unidad --}}
-            @if ($general->isNotEmpty())
+            @if ($general->isNotEmpty() || $generalTareas->isNotEmpty())
                 <div class="card mb-3">
                     <div class="card-header bg-white fw-bold"><i class="bi bi-pin-angle me-1"></i>General</div>
                     <div class="list-group list-group-flush">
                         @foreach ($general as $clase)
                             @include('clases._item', ['clase' => $clase])
+                        @endforeach
+                        @foreach ($generalTareas as $tarea)
+                            @include('tareas._item', ['tarea' => $tarea])
                         @endforeach
                     </div>
                 </div>
@@ -111,7 +118,10 @@
 
             {{-- Unidades --}}
             @foreach ($unidades as $unidad)
-                @php($clasesUnidad = $clasesPorUnidad->get($unidad->id, collect()))
+                @php
+                    $clasesUnidad = $clasesPorUnidad->get($unidad->id, collect());
+                    $tareasUnidad = $tareasPorUnidad->get($unidad->id, collect());
+                @endphp
                 <div class="card mb-3 {{ $unidad->visible ? '' : 'opacity-75' }}">
                     <div class="card-header bg-white d-flex align-items-center gap-2">
                         <div class="flex-grow-1">
@@ -125,6 +135,8 @@
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ route('clases.create', ['aula' => $aula, 'unidad' => $unidad->id]) }}" class="btn btn-outline-primary"
                                    data-bs-toggle="tooltip" title="Agregar clase a esta unidad"><i class="bi bi-plus-lg"></i></a>
+                                <a href="{{ route('tareas.create', ['aula' => $aula, 'unidad' => $unidad->id]) }}" class="btn btn-outline-primary"
+                                   data-bs-toggle="tooltip" title="Agregar tarea a esta unidad"><i class="bi bi-clipboard-plus"></i></a>
                                 <form method="POST" action="{{ route('unidades.mover', [$unidad, 'arriba']) }}">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="btn btn-outline-secondary" @disabled($loop->first) title="Subir"><i class="bi bi-arrow-up"></i></button>
@@ -153,11 +165,15 @@
                     @endif
 
                     <div class="list-group list-group-flush">
-                        @forelse ($clasesUnidad as $clase)
+                        @foreach ($clasesUnidad as $clase)
                             @include('clases._item', ['clase' => $clase])
-                        @empty
-                            <div class="list-group-item small text-muted">Sin clases todavía.</div>
-                        @endforelse
+                        @endforeach
+                        @foreach ($tareasUnidad as $tarea)
+                            @include('tareas._item', ['tarea' => $tarea])
+                        @endforeach
+                        @if ($clasesUnidad->isEmpty() && $tareasUnidad->isEmpty())
+                            <div class="list-group-item small text-muted">Sin contenido todavía.</div>
+                        @endif
                     </div>
                 </div>
             @endforeach
@@ -165,6 +181,22 @@
 
         {{-- Columna lateral --}}
         <div class="col-lg-4">
+            @if ($pendientes->isNotEmpty())
+                <div class="card mb-4 border-warning">
+                    <div class="card-body">
+                        <h2 class="h6 fw-bold mb-3"><i class="bi bi-alarm me-1 text-warning"></i>Próximas entregas</h2>
+                        <ul class="list-unstyled mb-0">
+                            @foreach ($pendientes as $p)
+                                <li class="mb-2">
+                                    <a href="{{ route('tareas.show', $p) }}" class="fw-semibold d-block text-truncate">{{ $p->titulo }}</a>
+                                    <span class="small text-muted">Vence el {{ $p->fecha_limite->format('d/m H:i') }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             @if ($puedeEditar)
                 <div class="card mb-4">
                     <div class="card-body">

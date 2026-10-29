@@ -88,19 +88,42 @@ class AulaController extends Controller
 
         $unidades = $aula->unidades()->get();
         $clases   = $aula->clases()->with('recursos')->get();
+        $tareas   = $aula->tareas()
+            ->withCount([
+                'entregas',
+                'entregas as por_corregir_count' => fn ($q) => $q->where('estado', 'entregada'),
+            ])
+            ->get();
 
-        // Los alumnos solo ven unidades visibles y clases publicadas (filtro en PHP)
+        // Los alumnos solo ven unidades visibles y contenido publicado (filtro en PHP)
         if (! $puedeEditar) {
             $unidades = $unidades->where('visible', true)->values();
             $clases   = $clases->filter(fn ($c) => $c->estaPublicada())->values();
+            $tareas   = $tareas->filter(fn ($t) => $t->estaPublicada())->values();
         }
 
         $clasesPorUnidad = $clases->groupBy(fn ($c) => $c->unidad_id ?? 0);
+        $tareasPorUnidad = $tareas->groupBy(fn ($t) => $t->unidad_id ?? 0);
+
+        // Entregas del alumno, para mostrar el estado de cada tarea
+        $misEntregas = $puedeEditar
+            ? collect()
+            : \App\Models\Entrega::where('alumno_id', $user->id)->whereIn('tarea_id', $tareas->pluck('id'))->get()->keyBy('tarea_id');
+
+        // Próximas entregas pendientes del alumno (para la columna lateral)
+        $pendientes = $puedeEditar
+            ? collect()
+            : $tareas->filter(fn ($t) => $t->fecha_limite && ! $t->estaVencida()
+                && (! isset($misEntregas[$t->id]) || $misEntregas[$t->id]->estado === 'devuelta'))
+                ->sortBy('fecha_limite')->take(5)->values();
 
         $docentes = $aula->docentes()->orderBy('apellido')->orderBy('name')->get();
         $alumnos  = $aula->alumnos()->orderBy('apellido')->orderBy('name')->get();
 
-        return view('aulas.show', compact('aula', 'unidades', 'clasesPorUnidad', 'docentes', 'alumnos', 'puedeEditar'));
+        return view('aulas.show', compact(
+            'aula', 'unidades', 'clasesPorUnidad', 'tareasPorUnidad', 'misEntregas', 'pendientes',
+            'docentes', 'alumnos', 'puedeEditar'
+        ));
     }
 
     // ===================== Edición =====================

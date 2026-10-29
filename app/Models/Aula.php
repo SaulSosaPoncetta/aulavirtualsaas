@@ -102,6 +102,21 @@ class Aula extends Model
         return $this->hasMany(Clase::class)->orderBy('orden')->orderBy('id');
     }
 
+    public function tareas()
+    {
+        return $this->hasMany(Tarea::class)->orderByRaw('CASE WHEN fecha_limite IS NULL THEN 1 ELSE 0 END')->orderBy('fecha_limite')->orderBy('id');
+    }
+
+    /** ¿El usuario es alumno activo de esta aula? */
+    public function esAlumno(User $user): bool
+    {
+        return $this->miembros()
+            ->where('users.id', $user->id)
+            ->wherePivot('rol', 'alumno')
+            ->wherePivot('estado', 'activo')
+            ->exists();
+    }
+
     // ===================== Ayudas =====================
 
     public function getNombreAttribute(): string
