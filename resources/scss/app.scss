@@ -90,6 +90,10 @@ main {
 .login-caja {
     max-width: 420px;
 
+    &.login-caja-ancha {
+        max-width: 560px;
+    }
+
     h1, > .text-center p {
         color: #ffffff;
     }

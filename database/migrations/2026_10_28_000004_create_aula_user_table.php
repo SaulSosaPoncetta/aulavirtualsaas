@@ -8,23 +8,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Inscripciones de alumnos a aulas
-        Schema::create('aula_alumno', function (Blueprint $table) {
+        // Miembros de cada aula: docentes (titular y co-docentes) y alumnos
+        Schema::create('aula_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('aula_id')->constrained('aulas')->cascadeOnDelete();
-            $table->foreignId('alumno_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('origen', ['sgi', 'codigo', 'manual', 'excel'])->default('manual');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->enum('rol', ['docente', 'alumno']);
+            $table->enum('origen', ['creador', 'codigo', 'manual', 'excel', 'institucion'])->default('manual');
             $table->enum('estado', ['activo', 'baja'])->default('activo');
             $table->date('fecha_alta')->nullable();
             $table->date('fecha_baja')->nullable();
             $table->timestamps();
 
-            $table->unique(['aula_id', 'alumno_id']);
+            $table->unique(['aula_id', 'user_id']);
+            $table->index(['user_id', 'rol', 'estado']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('aula_alumno');
+        Schema::dropIfExists('aula_user');
     }
 };

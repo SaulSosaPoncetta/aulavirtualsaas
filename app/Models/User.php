@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\RestablecerPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -18,9 +19,9 @@ class User extends Authenticatable
         'dni',
         'email',
         'password',
-        'origen',
-        'gestionaula_id',
-        'sgi_id',
+        'debe_cambiar_password',
+        'telefono',
+        'fecha_nacimiento',
         'avatar',
         'activo',
         'ultimo_acceso_at',
@@ -34,11 +35,29 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'ultimo_acceso_at'  => 'datetime',
-            'password'          => 'hashed',
-            'activo'            => 'boolean',
+            'email_verified_at'     => 'datetime',
+            'ultimo_acceso_at'      => 'datetime',
+            'fecha_nacimiento'      => 'date',
+            'password'              => 'hashed',
+            'activo'                => 'boolean',
+            'debe_cambiar_password' => 'boolean',
         ];
+    }
+
+    // ===================== Búsqueda para el login =====================
+
+    /** Busca por email (si tiene @) o por DNI (solo números). */
+    public static function buscarPorUsuario(string $valor): ?self
+    {
+        $valor = trim($valor);
+
+        if (str_contains($valor, '@')) {
+            return static::where('email', mb_strtolower($valor))->first();
+        }
+
+        $dni = preg_replace('/\D/', '', $valor);
+
+        return $dni !== '' ? static::where('dni', $dni)->first() : null;
     }
 
     // ===================== Relaciones =====================
@@ -50,18 +69,28 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    // Aulas que dicta (docente)
-    public function aulasDocente()
+    // Aulas de las que es titular
+    public function aulasTitular()
     {
         return $this->hasMany(Aula::class, 'docente_id');
     }
 
-    // Aulas en las que está inscripto (alumno)
-    public function aulasAlumno()
+    // Todas las aulas en las que participa (como docente o alumno)
+    public function aulas()
     {
-        return $this->belongsToMany(Aula::class, 'aula_alumno', 'alumno_id', 'aula_id')
-            ->withPivot('origen', 'estado', 'fecha_alta', 'fecha_baja')
+        return $this->belongsToMany(Aula::class, 'aula_user')
+            ->withPivot('rol', 'origen', 'estado', 'fecha_alta', 'fecha_baja')
             ->withTimestamps();
+    }
+
+    public function aulasComoDocente()
+    {
+        return $this->aulas()->wherePivot('rol', 'docente')->wherePivot('estado', 'activo');
+    }
+
+    public function aulasComoAlumno()
+    {
+        return $this->aulas()->wherePivot('rol', 'alumno')->wherePivot('estado', 'activo');
     }
 
     // ===================== Ayudas =====================
@@ -79,5 +108,15 @@ class User extends Authenticatable
     public function esAlumno(): bool
     {
         return $this->hasRole('alumno');
+    }
+
+    public function esSuperadmin(): bool
+    {
+        return $this->hasRole('superadmin');
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new RestablecerPassword($token));
     }
 }

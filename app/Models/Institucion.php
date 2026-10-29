@@ -9,23 +9,33 @@ class Institucion extends Model
     protected $table = 'instituciones';
 
     protected $fillable = [
-        'sgi_id',
         'nombre',
         'cue',
         'nivel',
         'localidad',
+        'provincia',
+        'telefono',
+        'email',
         'logo',
-        'origen',
+        'codigo_invitacion',
+        'creada_por',
         'activo',
-        'sincronizado_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'activo'          => 'boolean',
-            'sincronizado_at' => 'datetime',
+            'activo' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Institucion $i) {
+            if (empty($i->codigo_invitacion)) {
+                $i->codigo_invitacion = Aula::codigoUnico(fn ($c) => static::where('codigo_invitacion', $c)->exists(), 8);
+            }
+        });
     }
 
     public function usuarios()
@@ -33,6 +43,11 @@ class Institucion extends Model
         return $this->belongsToMany(User::class, 'institucion_user')
             ->withPivot('rol', 'activo')
             ->withTimestamps();
+    }
+
+    public function administradores()
+    {
+        return $this->usuarios()->wherePivot('rol', 'admin');
     }
 
     public function docentes()
@@ -48,10 +63,5 @@ class Institucion extends Model
     public function aulas()
     {
         return $this->hasMany(Aula::class);
-    }
-
-    public function usaSgi(): bool
-    {
-        return ! is_null($this->sgi_id);
     }
 }

@@ -48,6 +48,11 @@
                                 </span>
                             </li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Mi perfil</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('password.cambiar') }}">
+                                    <i class="bi bi-key me-2"></i>Cambiar contraseña
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
@@ -63,6 +68,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('login') }}">
                             <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('registro') }}">
+                            <i class="bi bi-person-plus me-1"></i> Crear cuenta
                         </a>
                     </li>
                 @endauth

@@ -11,15 +11,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesSeeder::class);
 
-        // Superadministrador local (única cuenta con contraseña propia)
         $admin = User::firstOrCreate(
             ['email' => 'admin@migestion.com.ar'],
             [
-                'name'     => 'Administrador',
-                'apellido' => 'MiGestión',
-                'password' => 'cambiar123',
-                'origen'   => 'local',
-                'activo'   => true,
+                'name'                  => 'Administrador',
+                'apellido'              => 'MiGestión',
+                'password'              => 'cambiar123',
+                'debe_cambiar_password' => true,
+                'activo'                => true,
             ]
         );
 

@@ -4,9 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\AutenticacionService;
-use App\Services\Integraciones\GestionAulaClient;
-use App\Services\Integraciones\SgiClient;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,99 +18,55 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
-    public function store(
-        Request $request,
-        GestionAulaClient $gestionAula,
-        SgiClient $sgi,
-        AutenticacionService $auth
-    ) {
+    public function store(Request $request)
+    {
         $datos = $request->validate([
-            'tipo'     => 'required|in:docente,alumno',
-            'usuario'  => 'required|string|max:120',
+            'usuario'  => 'required|string|max:150',
             'password' => 'required|string|max:120',
         ], [], [
-            'usuario'  => $request->tipo === 'alumno' ? 'DNI' : 'email',
+            'usuario'  => 'email o DNI',
             'password' => 'contraseña',
         ]);
 
-        $usuario = trim($datos['usuario']);
-        if ($datos['tipo'] === 'alumno') {
-            $usuario = preg_replace('/\D/', '', $usuario);
-        }
+        // Límite: 5 intentos por minuto por usuario + IP
+        $clave = Str::lower(trim($datos['usuario'])) . '|' . $request->ip();
 
-        // Límite de intentos: 5 por minuto
-        $clave = Str::lower($datos['tipo'] . '|' . $usuario . '|' . $request->ip());
         if (RateLimiter::tooManyAttempts($clave, 5)) {
             $seg = RateLimiter::availableIn($clave);
-            return back()->withInput($request->except('password'))
+            return back()->withInput($request->only('usuario'))
                 ->with('error', "Demasiados intentos. Probá de nuevo en {$seg} segundos.");
         }
 
-        // 1) Cuenta local con contraseña propia (superadmin o alumno sin SGI)
-        $local = $datos['tipo'] === 'alumno'
-            ? User::where('dni', $usuario)->whereNotNull('password')->first()
-            : User::where('email', $usuario)->whereNotNull('password')->first();
+        $user = User::buscarPorUsuario($datos['usuario']);
 
-        if ($local && Hash::check($datos['password'], $local->password)) {
-            return $this->ingresar($request, $local, $clave);
-        }
-
-        // 2) Docente contra GestiónAula
-        if ($datos['tipo'] === 'docente') {
-            $res = $gestionAula->login($usuario, $datos['password']);
-
-            if (! $res['ok']) {
-                RateLimiter::hit($clave, 60);
-                return back()->withInput($request->except('password'))->with('error', $res['mensaje']);
-            }
-
-            $user = $auth->sincronizarDocente($res['docente']);
-            $request->session()->put('gestionaula_token', $res['token']);
-
-            return $this->ingresar($request, $user, $clave);
-        }
-
-        // 3) Alumno contra el SGI
-        $res = $sgi->loginAlumno($usuario, $datos['password']);
-
-        if (! $res['ok']) {
+        if (! $user || ! Hash::check($datos['password'], $user->password)) {
             RateLimiter::hit($clave, 60);
-            return back()->withInput($request->except('password'))->with('error', $res['mensaje']);
+            return back()->withInput($request->only('usuario'))
+                ->with('error', 'El email/DNI o la contraseña no son correctos.');
         }
 
-        $user = $auth->sincronizarAlumno($res['alumno'], $res['institucion']);
-
-        return $this->ingresar($request, $user, $clave);
-    }
-
-    protected function ingresar(Request $request, User $user, string $clave)
-    {
         if (! $user->activo) {
-            return back()->withInput($request->except('password'))
-                ->with('error', 'Tu usuario está deshabilitado. Consultá con la institución.');
-        }
-
-        $token = $request->session()->get('gestionaula_token');
-
-        Auth::login($user, $request->boolean('recordar'));
-        $request->session()->regenerate();
-
-        // regenerate() conserva los datos; se vuelve a asegurar el token
-        if ($token) {
-            $request->session()->put('gestionaula_token', $token);
+            return back()->withInput($request->only('usuario'))
+                ->with('error', 'Tu usuario está deshabilitado. Consultá con tu docente o institución.');
         }
 
         RateLimiter::clear($clave);
 
+        Auth::login($user, $request->boolean('recordar'));
+        $request->session()->regenerate();
+
         $user->forceFill(['ultimo_acceso_at' => Carbon::now('America/Argentina/Buenos_Aires')])->save();
+
+        if ($user->debe_cambiar_password) {
+            return redirect()->route('password.cambiar')
+                ->with('exito', 'Antes de continuar, elegí una contraseña nueva.');
+        }
 
         return redirect()->intended(route('inicio'));
     }
 
-    public function destroy(Request $request, GestionAulaClient $gestionAula)
+    public function destroy(Request $request)
     {
-        $gestionAula->logout($request->session()->get('gestionaula_token'));
-
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

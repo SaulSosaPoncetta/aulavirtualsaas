@@ -12,7 +12,8 @@ class RolesSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        foreach (['superadmin', 'admin_institucion', 'docente', 'alumno'] as $rol) {
+        // El administrador de institución se maneja en institucion_user (rol = admin)
+        foreach (['superadmin', 'docente', 'alumno'] as $rol) {
             Role::firstOrCreate(['name' => $rol, 'guard_name' => 'web']);
         }
     }

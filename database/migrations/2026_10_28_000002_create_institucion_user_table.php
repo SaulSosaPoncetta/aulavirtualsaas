@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Un docente puede trabajar en varias instituciones; un alumno normalmente en una
+        // Personas de cada institución y su rol dentro de ella
         Schema::create('institucion_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('institucion_id')->constrained('instituciones')->cascadeOnDelete();

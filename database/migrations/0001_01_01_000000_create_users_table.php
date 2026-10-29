@@ -10,18 +10,15 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');                                  // nombre
-            $table->string('apellido')->nullable();
-            $table->string('dni', 15)->nullable()->unique();         // clave de vínculo con SGI
-            $table->string('email')->nullable()->unique();           // alumnos pueden no tener email
+            $table->string('name');                                   // nombre
+            $table->string('apellido');
+            $table->string('dni', 15)->nullable()->unique();          // se puede ingresar con DNI
+            $table->string('email')->nullable()->unique();            // o con email
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable();                  // null si valida contra GestiónAula/SGI
-
-            // Vínculo con sistemas externos
-            $table->enum('origen', ['local', 'gestionaula', 'sgi'])->default('local');
-            $table->unsignedBigInteger('gestionaula_id')->nullable()->unique(); // id del docente en GestiónAula
-            $table->unsignedBigInteger('sgi_id')->nullable()->unique();         // id del alumno en el SGI
-
+            $table->string('password');
+            $table->boolean('debe_cambiar_password')->default(false); // alta hecha por docente/institución
+            $table->string('telefono', 40)->nullable();
+            $table->date('fecha_nacimiento')->nullable();
             $table->string('avatar')->nullable();
             $table->boolean('activo')->default(true);
             $table->timestamp('ultimo_acceso_at')->nullable();

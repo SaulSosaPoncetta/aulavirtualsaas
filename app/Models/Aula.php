@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Aula extends Model
 {
@@ -15,27 +15,25 @@ class Aula extends Model
     protected $fillable = [
         'institucion_id',
         'docente_id',
-        'gestionaula_designacion_id',
-        'sgi_curso_id',
         'materia',
         'curso',
         'division',
         'turno',
+        'escuela',
         'ciclo_lectivo',
         'descripcion',
         'imagen',
+        'color',
         'codigo_acceso',
         'codigo_activo',
         'estado',
-        'sincronizado_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'codigo_activo'   => 'boolean',
-            'ciclo_lectivo'   => 'integer',
-            'sincronizado_at' => 'datetime',
+            'codigo_activo' => 'boolean',
+            'ciclo_lectivo' => 'integer',
         ];
     }
 
@@ -43,17 +41,24 @@ class Aula extends Model
     {
         static::creating(function (Aula $aula) {
             if (empty($aula->codigo_acceso)) {
-                $aula->codigo_acceso = static::generarCodigo();
+                $aula->codigo_acceso = static::codigoUnico(
+                    fn ($c) => static::withTrashed()->where('codigo_acceso', $c)->exists()
+                );
             }
         });
     }
 
-    // Código de 6 caracteres sin letras/números confusos (0, O, 1, I)
-    public static function generarCodigo(): string
+    /** Código aleatorio sin caracteres confusos (0, O, 1, I). */
+    public static function codigoUnico(Closure $existe, int $largo = 6): string
     {
+        $alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
         do {
-            $codigo = Str::upper(substr(str_shuffle(str_repeat('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 3)), 0, 6));
-        } while (static::withTrashed()->where('codigo_acceso', $codigo)->exists());
+            $codigo = '';
+            for ($i = 0; $i < $largo; $i++) {
+                $codigo .= $alfabeto[random_int(0, strlen($alfabeto) - 1)];
+            }
+        } while ($existe($codigo));
 
         return $codigo;
     }
@@ -65,21 +70,26 @@ class Aula extends Model
         return $this->belongsTo(Institucion::class);
     }
 
-    public function docente()
+    public function titular()
     {
         return $this->belongsTo(User::class, 'docente_id');
     }
 
-    public function alumnos()
+    public function miembros()
     {
-        return $this->belongsToMany(User::class, 'aula_alumno', 'aula_id', 'alumno_id')
-            ->withPivot('origen', 'estado', 'fecha_alta', 'fecha_baja')
+        return $this->belongsToMany(User::class, 'aula_user')
+            ->withPivot('rol', 'origen', 'estado', 'fecha_alta', 'fecha_baja')
             ->withTimestamps();
     }
 
-    public function alumnosActivos()
+    public function docentes()
     {
-        return $this->alumnos()->wherePivot('estado', 'activo');
+        return $this->miembros()->wherePivot('rol', 'docente')->wherePivot('estado', 'activo');
+    }
+
+    public function alumnos()
+    {
+        return $this->miembros()->wherePivot('rol', 'alumno')->wherePivot('estado', 'activo');
     }
 
     // ===================== Ayudas =====================
@@ -90,8 +100,18 @@ class Aula extends Model
         return $curso ? "{$this->materia} — {$curso}" : $this->materia;
     }
 
+    public function getNombreEscuelaAttribute(): ?string
+    {
+        return $this->institucion?->nombre ?? $this->escuela;
+    }
+
     public function scopeActivas($query)
     {
         return $query->where('estado', 'activa');
+    }
+
+    public function esMiembro(User $user): bool
+    {
+        return $this->miembros()->where('users.id', $user->id)->wherePivot('estado', 'activo')->exists();
     }
 }
