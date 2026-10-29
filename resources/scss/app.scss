@@ -1,0 +1,91 @@
+// Variables propias (antes de Bootstrap para sobrescribir)
+@import "variables";
+
+// Bootstrap e íconos
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+// ============================================================
+// Estilos generales Aula Virtual
+// ============================================================
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+// Navbar superior
+.navbar-aula {
+    background-color: $teal-oscuro;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+
+    .navbar-brand {
+        font-weight: 700;
+        letter-spacing: .3px;
+
+        i {
+            color: $ambar;
+        }
+    }
+
+    .nav-link {
+        border-radius: $border-radius-sm;
+        padding-left: .75rem !important;
+        padding-right: .75rem !important;
+
+        &:hover,
+        &.active {
+            background-color: $teal-profundo;
+        }
+    }
+}
+
+// Encabezado de página
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+
+    h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+}
+
+// Tarjetas
+.card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+
+.card-aula {
+    border-top: 4px solid $teal-oscuro;
+    transition: transform .15s ease, box-shadow .15s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .10);
+    }
+}
+
+// Badge de pendiente / vencimiento
+.badge-pendiente {
+    background-color: $ambar;
+    color: $pizarra;
+}
+
+// Pie
+.footer-aula {
+    background-color: #ffffff;
+    border-top: 1px solid rgba($teal-oscuro, .12);
+    color: $secondary;
+    font-size: .875rem;
+}

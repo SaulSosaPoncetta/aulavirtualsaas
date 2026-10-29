@@ -6,17 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('name');                                  // nombre
+            $table->string('apellido')->nullable();
+            $table->string('dni', 15)->nullable()->unique();         // clave de vínculo con SGI
+            $table->string('email')->nullable()->unique();           // alumnos pueden no tener email
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();                  // null si valida contra GestiónAula/SGI
+
+            // Vínculo con sistemas externos
+            $table->enum('origen', ['local', 'gestionaula', 'sgi'])->default('local');
+            $table->unsignedBigInteger('gestionaula_id')->nullable()->unique(); // id del docente en GestiónAula
+            $table->unsignedBigInteger('sgi_id')->nullable()->unique();         // id del alumno en el SGI
+
+            $table->string('avatar')->nullable();
+            $table->boolean('activo')->default(true);
+            $table->timestamp('ultimo_acceso_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -37,13 +45,10 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };
