@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AulaController;
 use App\Http\Controllers\Auth\CambiarPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarPasswordController;
@@ -28,7 +29,14 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::get('/cambiar-password', [CambiarPasswordController::class, 'create'])->name('password.cambiar');
     Route::post('/cambiar-password', [CambiarPasswordController::class, 'store'])->name('password.actualizar');
 
-    Route::get('/', function () {
-        return view('inicio');
-    })->name('inicio');
+    // Mis aulas (pantalla de inicio)
+    Route::get('/', [AulaController::class, 'index'])->name('inicio');
+
+    Route::post('/aulas/unirse', [AulaController::class, 'unirse'])->middleware('throttle:20,1')->name('aulas.unirse');
+    Route::resource('aulas', AulaController::class)->except('index');
+    Route::patch('/aulas/{aula}/archivar', [AulaController::class, 'archivar'])->name('aulas.archivar');
+    Route::patch('/aulas/{aula}/codigo/regenerar', [AulaController::class, 'regenerarCodigo'])->name('aulas.codigo.regenerar');
+    Route::patch('/aulas/{aula}/codigo/alternar', [AulaController::class, 'alternarCodigo'])->name('aulas.codigo.alternar');
+    Route::patch('/aulas/{aula}/miembros/{user}/baja', [AulaController::class, 'bajaMiembro'])->name('aulas.miembros.baja');
+    Route::post('/aulas/{aula}/salir', [AulaController::class, 'salir'])->name('aulas.salir');
 });

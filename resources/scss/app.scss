@@ -124,3 +124,28 @@ main {
     color: $secondary;
     font-size: .875rem;
 }
+
+// Aulas
+.aula-portada {
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, .12) 0%, rgba(0, 0, 0, .12) 100%);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .10);
+}
+
+.codigo-aula {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: .25em;
+    color: $teal-oscuro;
+}
+
+.selector-color {
+    width: 36px;
+    height: 36px;
+    border-radius: 50% !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .6);
+}
+
+.btn-check:checked + .selector-color {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 5px $pizarra;
+}
