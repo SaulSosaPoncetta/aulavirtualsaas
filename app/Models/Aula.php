@@ -107,6 +107,11 @@ class Aula extends Model
         return $this->hasMany(Tarea::class)->orderByRaw('CASE WHEN fecha_limite IS NULL THEN 1 ELSE 0 END')->orderBy('fecha_limite')->orderBy('id');
     }
 
+    public function evaluaciones()
+    {
+        return $this->hasMany(Evaluacion::class)->orderByRaw('CASE WHEN fecha_cierre IS NULL THEN 1 ELSE 0 END')->orderBy('fecha_cierre')->orderBy('id');
+    }
+
     /** ¿El usuario es alumno activo de esta aula? */
     public function esAlumno(User $user): bool
     {

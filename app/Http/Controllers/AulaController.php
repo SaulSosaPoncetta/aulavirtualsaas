@@ -95,8 +95,16 @@ class AulaController extends Controller
             ])
             ->get();
 
+        $evaluaciones = $aula->evaluaciones()
+            ->withCount([
+                'preguntas',
+                'intentos as por_revisar_count' => fn ($q) => $q->where('estado', 'pendiente_revision'),
+            ])
+            ->get();
+
         // Los alumnos solo ven unidades visibles y contenido publicado (filtro en PHP)
         if (! $puedeEditar) {
+            $evaluaciones = $evaluaciones->filter(fn ($e) => $e->estaPublicada())->values();
             $unidades = $unidades->where('visible', true)->values();
             $clases   = $clases->filter(fn ($c) => $c->estaPublicada())->values();
             $tareas   = $tareas->filter(fn ($t) => $t->estaPublicada())->values();
@@ -104,6 +112,24 @@ class AulaController extends Controller
 
         $clasesPorUnidad = $clases->groupBy(fn ($c) => $c->unidad_id ?? 0);
         $tareasPorUnidad = $tareas->groupBy(fn ($t) => $t->unidad_id ?? 0);
+        $evaluacionesPorUnidad = $evaluaciones->groupBy(fn ($e) => $e->unidad_id ?? 0);
+
+        // Cantidad de alumnos que rindieron cada evaluación (para el docente)
+        $rindieron = $puedeEditar
+            ? DB::table('intentos')
+                ->whereIn('evaluacion_id', $evaluaciones->pluck('id'))
+                ->where('estado', '!=', 'en_curso')
+                ->selectRaw('evaluacion_id, COUNT(DISTINCT alumno_id) AS total')
+                ->groupBy('evaluacion_id')
+                ->pluck('total', 'evaluacion_id')
+            : collect();
+
+        // Intentos del alumno: mejor nota y estado por evaluación
+        $misIntentos = $puedeEditar
+            ? collect()
+            : \App\Models\Intento::where('alumno_id', $user->id)
+                ->whereIn('evaluacion_id', $evaluaciones->pluck('id'))
+                ->get()->groupBy('evaluacion_id');
 
         // Entregas del alumno, para mostrar el estado de cada tarea
         $misEntregas = $puedeEditar
@@ -115,13 +141,17 @@ class AulaController extends Controller
             ? collect()
             : $tareas->filter(fn ($t) => $t->fecha_limite && ! $t->estaVencida()
                 && (! isset($misEntregas[$t->id]) || $misEntregas[$t->id]->estado === 'devuelta'))
-                ->sortBy('fecha_limite')->take(5)->values();
+                ->map(fn ($t) => ['titulo' => $t->titulo, 'fecha' => $t->fecha_limite, 'url' => route('tareas.show', $t), 'tipo' => 'Tarea'])
+                ->concat($evaluaciones->filter(fn ($e) => $e->fecha_cierre && ! $e->estaCerrada() && ! isset($misIntentos[$e->id]))
+                    ->map(fn ($e) => ['titulo' => $e->titulo, 'fecha' => $e->fecha_cierre, 'url' => route('evaluaciones.show', $e), 'tipo' => 'Evaluación']))
+                ->sortBy(fn ($x) => $x['fecha']->getTimestamp())->take(5)->values();
 
         $docentes = $aula->docentes()->orderBy('apellido')->orderBy('name')->get();
         $alumnos  = $aula->alumnos()->orderBy('apellido')->orderBy('name')->get();
 
         return view('aulas.show', compact(
-            'aula', 'unidades', 'clasesPorUnidad', 'tareasPorUnidad', 'misEntregas', 'pendientes',
+            'aula', 'unidades', 'clasesPorUnidad', 'tareasPorUnidad', 'evaluacionesPorUnidad',
+            'misEntregas', 'misIntentos', 'rindieron', 'pendientes',
             'docentes', 'alumnos', 'puedeEditar'
         ));
     }

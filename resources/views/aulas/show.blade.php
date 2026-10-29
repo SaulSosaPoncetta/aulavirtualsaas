@@ -73,6 +73,9 @@
                     <a href="{{ route('tareas.create', $aula) }}" class="btn btn-primary">
                         <i class="bi bi-clipboard-plus me-1"></i> Nueva tarea
                     </a>
+                    <a href="{{ route('evaluaciones.create', $aula) }}" class="btn btn-primary">
+                        <i class="bi bi-ui-checks me-1"></i> Nueva evaluación
+                    </a>
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalUnidad"
                             data-accion="{{ route('unidades.store', $aula) }}" data-metodo="POST" data-titulo="" data-descripcion="" data-visible="1">
                         <i class="bi bi-folder-plus me-1"></i> Nueva unidad
@@ -83,7 +86,8 @@
             @php
                 $general       = $clasesPorUnidad->get(0, collect());
                 $generalTareas = $tareasPorUnidad->get(0, collect());
-                $hayContenido  = $unidades->isNotEmpty() || $general->isNotEmpty() || $generalTareas->isNotEmpty();
+                $generalEvals  = $evaluacionesPorUnidad->get(0, collect());
+                $hayContenido  = $unidades->isNotEmpty() || $general->isNotEmpty() || $generalTareas->isNotEmpty() || $generalEvals->isNotEmpty();
             @endphp
 
             @unless ($hayContenido)
@@ -102,7 +106,7 @@
             @endunless
 
             {{-- Clases sin unidad --}}
-            @if ($general->isNotEmpty() || $generalTareas->isNotEmpty())
+            @if ($general->isNotEmpty() || $generalTareas->isNotEmpty() || $generalEvals->isNotEmpty())
                 <div class="card mb-3">
                     <div class="card-header bg-white fw-bold"><i class="bi bi-pin-angle me-1"></i>General</div>
                     <div class="list-group list-group-flush">
@@ -111,6 +115,9 @@
                         @endforeach
                         @foreach ($generalTareas as $tarea)
                             @include('tareas._item', ['tarea' => $tarea])
+                        @endforeach
+                        @foreach ($generalEvals as $evaluacion)
+                            @include('evaluaciones._item', ['evaluacion' => $evaluacion])
                         @endforeach
                     </div>
                 </div>
@@ -121,6 +128,7 @@
                 @php
                     $clasesUnidad = $clasesPorUnidad->get($unidad->id, collect());
                     $tareasUnidad = $tareasPorUnidad->get($unidad->id, collect());
+                    $evalsUnidad  = $evaluacionesPorUnidad->get($unidad->id, collect());
                 @endphp
                 <div class="card mb-3 {{ $unidad->visible ? '' : 'opacity-75' }}">
                     <div class="card-header bg-white d-flex align-items-center gap-2">
@@ -137,6 +145,8 @@
                                    data-bs-toggle="tooltip" title="Agregar clase a esta unidad"><i class="bi bi-plus-lg"></i></a>
                                 <a href="{{ route('tareas.create', ['aula' => $aula, 'unidad' => $unidad->id]) }}" class="btn btn-outline-primary"
                                    data-bs-toggle="tooltip" title="Agregar tarea a esta unidad"><i class="bi bi-clipboard-plus"></i></a>
+                                <a href="{{ route('evaluaciones.create', ['aula' => $aula, 'unidad' => $unidad->id]) }}" class="btn btn-outline-primary"
+                                   data-bs-toggle="tooltip" title="Agregar evaluación a esta unidad"><i class="bi bi-ui-checks"></i></a>
                                 <form method="POST" action="{{ route('unidades.mover', [$unidad, 'arriba']) }}">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="btn btn-outline-secondary" @disabled($loop->first) title="Subir"><i class="bi bi-arrow-up"></i></button>
@@ -171,7 +181,10 @@
                         @foreach ($tareasUnidad as $tarea)
                             @include('tareas._item', ['tarea' => $tarea])
                         @endforeach
-                        @if ($clasesUnidad->isEmpty() && $tareasUnidad->isEmpty())
+                        @foreach ($evalsUnidad as $evaluacion)
+                            @include('evaluaciones._item', ['evaluacion' => $evaluacion])
+                        @endforeach
+                        @if ($clasesUnidad->isEmpty() && $tareasUnidad->isEmpty() && $evalsUnidad->isEmpty())
                             <div class="list-group-item small text-muted">Sin contenido todavía.</div>
                         @endif
                     </div>
@@ -188,8 +201,8 @@
                         <ul class="list-unstyled mb-0">
                             @foreach ($pendientes as $p)
                                 <li class="mb-2">
-                                    <a href="{{ route('tareas.show', $p) }}" class="fw-semibold d-block text-truncate">{{ $p->titulo }}</a>
-                                    <span class="small text-muted">Vence el {{ $p->fecha_limite->format('d/m H:i') }}</span>
+                                    <a href="{{ $p['url'] }}" class="fw-semibold d-block text-truncate">{{ $p['titulo'] }}</a>
+                                    <span class="small text-muted">{{ $p['tipo'] }} · vence el {{ $p['fecha']->format('d/m H:i') }}</span>
                                 </li>
                             @endforeach
                         </ul>

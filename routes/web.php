@@ -4,6 +4,9 @@ use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
 use App\Http\Controllers\EntregaController;
+use App\Http\Controllers\EvaluacionController;
+use App\Http\Controllers\IntentoController;
+use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\TareaController;
 use App\Http\Controllers\UnidadController;
@@ -74,6 +77,29 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::post('/tareas/{tarea}/entrega', [EntregaController::class, 'guardar'])->middleware('throttle:20,1')->name('entregas.guardar');
     Route::get('/entregas/{entrega}', [EntregaController::class, 'show'])->name('entregas.show');
     Route::patch('/entregas/{entrega}/corregir', [EntregaController::class, 'corregir'])->name('entregas.corregir');
+
+    // Evaluaciones
+    Route::get('/aulas/{aula}/evaluaciones/crear', [EvaluacionController::class, 'create'])->name('evaluaciones.create');
+    Route::post('/aulas/{aula}/evaluaciones', [EvaluacionController::class, 'store'])->name('evaluaciones.store');
+    Route::get('/evaluaciones/{evaluacion}', [EvaluacionController::class, 'show'])->name('evaluaciones.show');
+    Route::get('/evaluaciones/{evaluacion}/editar', [EvaluacionController::class, 'edit'])->name('evaluaciones.edit');
+    Route::put('/evaluaciones/{evaluacion}', [EvaluacionController::class, 'update'])->name('evaluaciones.update');
+    Route::delete('/evaluaciones/{evaluacion}', [EvaluacionController::class, 'destroy'])->name('evaluaciones.destroy');
+    Route::get('/evaluaciones/{evaluacion}/preguntas', [EvaluacionController::class, 'preguntas'])->name('evaluaciones.preguntas');
+
+    // Preguntas
+    Route::post('/evaluaciones/{evaluacion}/preguntas', [PreguntaController::class, 'store'])->name('preguntas.store');
+    Route::put('/preguntas/{pregunta}', [PreguntaController::class, 'update'])->name('preguntas.update');
+    Route::delete('/preguntas/{pregunta}', [PreguntaController::class, 'destroy'])->name('preguntas.destroy');
+    Route::patch('/preguntas/{pregunta}/mover/{direccion}', [PreguntaController::class, 'mover'])
+        ->whereIn('direccion', ['arriba', 'abajo'])->name('preguntas.mover');
+
+    // Intentos (rendir y corregir)
+    Route::post('/evaluaciones/{evaluacion}/comenzar', [IntentoController::class, 'comenzar'])->name('intentos.comenzar');
+    Route::get('/intentos/{intento}/rendir', [IntentoController::class, 'rendir'])->name('intentos.rendir');
+    Route::post('/intentos/{intento}/finalizar', [IntentoController::class, 'finalizar'])->name('intentos.finalizar');
+    Route::get('/intentos/{intento}', [IntentoController::class, 'show'])->name('intentos.show');
+    Route::patch('/intentos/{intento}/calificar', [IntentoController::class, 'calificar'])->name('intentos.calificar');
 
     // Archivos de tareas y entregas
     Route::get('/archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])->name('archivos.descargar');

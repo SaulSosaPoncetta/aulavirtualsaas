@@ -160,3 +160,26 @@ main {
 .min-w-0 {
     min-width: 0;
 }
+
+// Evaluaciones
+.reloj-evaluacion {
+    position: sticky;
+    top: 70px;
+    z-index: 1010;
+    font-variant-numeric: tabular-nums;
+}
+
+.opcion-rendir {
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    padding: .6rem .75rem .6rem 2.25rem;
+    transition: background-color .1s ease;
+
+    &:hover {
+        background-color: $fondo;
+    }
+
+    .form-check-input:checked + .form-check-label {
+        font-weight: 600;
+    }
+}
