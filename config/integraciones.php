@@ -16,6 +16,7 @@ return [
         'token'      => env('GESTIONAULA_TOKEN'),
         'endpoints'  => [
             'login'          => '/login',
+            'logout'         => '/logout',
             'usuario'        => '/user',
             'designaciones'  => '/aulavirtual/designaciones',
             'enviar_notas'   => '/aulavirtual/notas',

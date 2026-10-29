@@ -82,6 +82,37 @@ main {
     color: $pizarra;
 }
 
+// Login
+.login-fondo {
+    background: linear-gradient(160deg, $teal-oscuro 0%, $teal-profundo 45%, $fondo 45%);
+}
+
+.login-caja {
+    max-width: 420px;
+
+    h1, > .text-center p {
+        color: #ffffff;
+    }
+
+    > .text-center .text-muted {
+        color: rgba(#fff, .8) !important;
+    }
+}
+
+.login-logo {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: $teal-oscuro;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .15);
+}
+
 // Pie
 .footer-aula {
     background-color: #ffffff;

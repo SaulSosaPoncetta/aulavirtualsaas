@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-aula sticky-top">
     <div class="container">
-        <a class="navbar-brand" href="{{ url('/') }}">
+        <a class="navbar-brand" href="{{ route('inicio') }}">
             <i class="bi bi-mortarboard-fill me-1"></i> Aula Virtual
         </a>
 
@@ -13,7 +13,7 @@
         <div class="collapse navbar-collapse" id="menuPrincipal">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}">
+                    <a class="nav-link {{ request()->routeIs('inicio') ? 'active' : '' }}" href="{{ route('inicio') }}">
                         <i class="bi bi-house-door me-1"></i> Inicio
                     </a>
                 </li>
@@ -39,13 +39,18 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle me-1"></i> {{ auth()->user()->name }}
+                            <i class="bi bi-person-circle me-1"></i> {{ auth()->user()->nombre_completo }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <span class="dropdown-item-text small text-muted">
+                                    {{ ucfirst(str_replace('_', ' ', auth()->user()->getRoleNames()->first() ?? '')) }}
+                                </span>
+                            </li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Mi perfil</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="POST" action="#">
+                                <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="dropdown-item text-danger">
                                         <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
@@ -56,7 +61,7 @@
                     </li>
                 @else
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="{{ route('login') }}">
                             <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
                         </a>
                     </li>
