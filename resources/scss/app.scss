@@ -183,3 +183,43 @@ main {
         font-weight: 600;
     }
 }
+
+// Libreta de calificaciones
+.libreta-contenedor {
+    max-height: 75vh;
+}
+
+.libreta {
+    font-size: .9rem;
+
+    thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .libreta-alumno {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background-color: #fff;
+        min-width: 200px;
+        white-space: nowrap;
+    }
+
+    thead .libreta-alumno,
+    tfoot .libreta-alumno {
+        z-index: 3;
+        background-color: $gray-100;
+    }
+
+    .libreta-col {
+        min-width: 110px;
+        max-width: 160px;
+    }
+
+    .libreta-promedio {
+        background-color: $fondo;
+        min-width: 90px;
+    }
+}

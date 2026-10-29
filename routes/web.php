@@ -6,6 +6,7 @@ use App\Http\Controllers\ClaseController;
 use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\IntentoController;
+use App\Http\Controllers\LibretaController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\TareaController;
@@ -100,6 +101,10 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::post('/intentos/{intento}/finalizar', [IntentoController::class, 'finalizar'])->name('intentos.finalizar');
     Route::get('/intentos/{intento}', [IntentoController::class, 'show'])->name('intentos.show');
     Route::patch('/intentos/{intento}/calificar', [IntentoController::class, 'calificar'])->name('intentos.calificar');
+
+    // Libreta de calificaciones
+    Route::get('/aulas/{aula}/calificaciones', [LibretaController::class, 'index'])->name('libreta.index');
+    Route::get('/aulas/{aula}/calificaciones/excel', [LibretaController::class, 'exportar'])->name('libreta.exportar');
 
     // Archivos de tareas y entregas
     Route::get('/archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])->name('archivos.descargar');

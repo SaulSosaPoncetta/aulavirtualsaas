@@ -21,6 +21,10 @@
                 @endif
             </div>
 
+            <div class="d-flex gap-2 align-items-start">
+            <a href="{{ route('libreta.index', $aula) }}" class="btn btn-light btn-sm">
+                <i class="bi bi-table me-1"></i> {{ $puedeEditar ? 'Calificaciones' : 'Mis notas' }}
+            </a>
             @if ($puedeEditar)
                 <div class="dropdown">
                     <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -51,6 +55,7 @@
                     </ul>
                 </div>
             @endif
+            </div>
         </div>
     </div>
 
