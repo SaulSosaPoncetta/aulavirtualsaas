@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\InstitucionController;
 use App\Models\Aula;
+use App\Models\Institucion;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,7 +18,7 @@ class RegistroController extends Controller
     public function create(Request $request)
     {
         return view('auth.registro', [
-            'tipo'   => $request->query('tipo') === 'alumno' ? 'alumno' : 'docente',
+            'tipo'   => in_array($request->query('tipo'), ['alumno', 'institucion']) ? $request->query('tipo') : 'docente',
             'codigo' => strtoupper((string) $request->query('codigo', '')),
         ]);
     }
@@ -30,10 +32,16 @@ class RegistroController extends Controller
             'codigo' => $request->filled('codigo') ? strtoupper(trim($request->codigo)) : null,
         ]);
 
-        $esAlumno = $request->input('tipo') === 'alumno';
+        $esAlumno      = $request->input('tipo') === 'alumno';
+        $esInstitucion = $request->input('tipo') === 'institucion';
+
+        // Datos de la institución (solo si se registra una institución)
+        $datosInstitucion = $esInstitucion
+            ? $request->validate(InstitucionController::reglas('inst_'), [], ['inst_nombre' => 'nombre de la institución'])
+            : [];
 
         $datos = $request->validate([
-            'tipo'     => 'required|in:docente,alumno',
+            'tipo'     => 'required|in:docente,alumno,institucion',
             'name'     => 'required|string|max:80',
             'apellido' => 'required|string|max:80',
             'email'    => [$esAlumno ? 'required_without:dni' : 'required', 'nullable', 'email', 'max:150', 'unique:users,email'],
@@ -65,7 +73,9 @@ class RegistroController extends Controller
             }
         }
 
-        $user = DB::transaction(function () use ($datos, $aula) {
+        $institucion = null;
+
+        $user = DB::transaction(function () use ($datos, $aula, $datosInstitucion, &$institucion) {
             $user = User::create([
                 'name'     => trim($datos['name']),
                 'apellido' => trim($datos['apellido']),
@@ -75,7 +85,25 @@ class RegistroController extends Controller
                 'activo'   => true,
             ]);
 
-            $user->assignRole($datos['tipo']);
+            if ($datos['tipo'] === 'institucion') {
+                // Quien registra la institución queda como administrador (y puede dar clases)
+                $user->assignRole('docente');
+
+                $institucion = Institucion::create([
+                    'nombre'     => $datosInstitucion['inst_nombre'],
+                    'cue'        => $datosInstitucion['inst_cue'] ?? null,
+                    'nivel'      => $datosInstitucion['inst_nivel'] ?? null,
+                    'localidad'  => $datosInstitucion['inst_localidad'] ?? null,
+                    'provincia'  => $datosInstitucion['inst_provincia'] ?? 'Buenos Aires',
+                    'telefono'   => $datosInstitucion['inst_telefono'] ?? null,
+                    'email'      => $datosInstitucion['inst_email'] ?? null,
+                    'creada_por' => $user->id,
+                    'activo'     => true,
+                ]);
+                $institucion->usuarios()->attach($user->id, ['rol' => 'admin', 'activo' => true]);
+            } else {
+                $user->assignRole($datos['tipo']);
+            }
 
             if ($aula) {
                 $aula->miembros()->attach($user->id, [
@@ -91,6 +119,11 @@ class RegistroController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        if ($institucion) {
+            return redirect()->route('instituciones.show', $institucion)
+                ->with('exito', "¡Listo! Compartí el código {$institucion->codigo_invitacion} con tus docentes para que se sumen.");
+        }
 
         $mensaje = $aula
             ? "¡Bienvenido/a! Ya estás inscripto/a en {$aula->nombre}."

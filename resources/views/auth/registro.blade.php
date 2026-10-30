@@ -23,6 +23,43 @@
             <label class="btn btn-outline-primary" for="tipoAlumno">
                 <i class="bi bi-backpack me-1"></i> Alumno
             </label>
+
+            <input type="radio" class="btn-check" name="tipo" id="tipoInstitucion" value="institucion"
+                   {{ $tipoActual === 'institucion' ? 'checked' : '' }}>
+            <label class="btn btn-outline-primary" for="tipoInstitucion">
+                <i class="bi bi-building me-1"></i> Institución
+            </label>
+        </div>
+
+        {{-- Datos de la institución --}}
+        <div id="bloqueInstitucion" class="border rounded p-3 mb-4 bg-light">
+            <h2 class="h6 fw-bold mb-3"><i class="bi bi-building me-1"></i>Datos de la institución</h2>
+            <div class="mb-3">
+                <label for="inst_nombre" class="form-label">Nombre de la institución</label>
+                <input type="text" class="form-control @error('inst_nombre') is-invalid @enderror" id="inst_nombre" name="inst_nombre"
+                       value="{{ old('inst_nombre') }}" maxlength="150" placeholder="Ej: EES N° 5 &quot;Manuel Belgrano&quot;">
+                @error('inst_nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <label for="inst_cue" class="form-label">CUE <span class="text-muted small">(opcional)</span></label>
+                    <input type="text" class="form-control" id="inst_cue" name="inst_cue" value="{{ old('inst_cue') }}" maxlength="20">
+                </div>
+                <div class="col-sm-4">
+                    <label for="inst_nivel" class="form-label">Nivel</label>
+                    <select class="form-select" id="inst_nivel" name="inst_nivel">
+                        <option value="">—</option>
+                        @foreach (\App\Models\Institucion::NIVELES as $valor => $texto)
+                            <option value="{{ $valor }}" @selected(old('inst_nivel') === $valor)>{{ $texto }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-sm-4">
+                    <label for="inst_localidad" class="form-label">Localidad</label>
+                    <input type="text" class="form-control" id="inst_localidad" name="inst_localidad" value="{{ old('inst_localidad') }}" maxlength="100">
+                </div>
+            </div>
+            <p class="small text-muted mt-3 mb-0">Abajo van los datos de quien administra la cuenta (directivo, secretario/a...).</p>
         </div>
 
         <div class="row g-3 mb-3">
@@ -105,7 +142,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const actualizar = () => {
         const alumno = document.getElementById('tipoAlumno').checked;
+        const inst   = document.getElementById('tipoInstitucion').checked;
         document.getElementById('bloqueCodigo').classList.toggle('d-none', !alumno);
+        document.getElementById('bloqueInstitucion').classList.toggle('d-none', !inst);
+        document.getElementById('inst_nombre').required = inst;
         document.getElementById('emailOpcional').textContent = alumno ? '(opcional si cargás el DNI)' : '';
         document.getElementById('dniOpcional').textContent = alumno ? '(opcional si cargás el email)' : '(opcional)';
     };

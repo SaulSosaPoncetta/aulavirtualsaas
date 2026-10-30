@@ -62,7 +62,24 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="escuela" class="form-label">Escuela / Institución</label>
+                            <label for="institucion_id" class="form-label">¿De quién es el aula?</label>
+                            <select class="form-select @error('institucion_id') is-invalid @enderror" id="institucion_id" name="institucion_id">
+                                <option value="">Personal (la uso por mi cuenta)</option>
+                                @foreach ($instituciones as $inst)
+                                    <option value="{{ $inst->id }}" @selected((string) old('institucion_id', $aula->institucion_id) === (string) $inst->id)>{{ $inst->nombre }}</option>
+                                @endforeach
+                            </select>
+                            @error('institucion_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">
+                                Si es de una institución, la escuela puede verla y sumar a sus alumnos.
+                                @if ($instituciones->isEmpty())
+                                    ¿Te pasaron un código de institución? <a href="{{ route('instituciones.index') }}">Sumate acá</a>.
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="bloqueEscuela">
+                            <label for="escuela" class="form-label">Escuela</label>
                             <input type="text" class="form-control @error('escuela') is-invalid @enderror"
                                    id="escuela" name="escuela" value="{{ old('escuela', $aula->escuela) }}"
                                    maxlength="150" placeholder="Ej: EES N° 5 — Tandil">
@@ -116,3 +133,14 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('institucion_id');
+    const actualizar = () => document.getElementById('bloqueEscuela').classList.toggle('d-none', sel.value !== '');
+    sel.addEventListener('change', actualizar);
+    actualizar();
+});
+</script>
+@endpush

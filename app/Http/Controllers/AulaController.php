@@ -46,7 +46,9 @@ class AulaController extends Controller
         $this->soloDocentes($request->user());
 
         return view('aulas.form', [
+            'instituciones' => $request->user()->institucionesDocente()->orderBy('nombre')->get()->unique('id')->values(),
             'aula'    => new Aula([
+                'institucion_id'   => $request->query('institucion'),
                 'ciclo_lectivo'    => $this->anioActual(),
                 'color'            => self::COLORES[0],
                 'alumnos_publican' => false,
@@ -61,7 +63,7 @@ class AulaController extends Controller
         $user = $request->user();
         $this->soloDocentes($user);
 
-        $datos = $this->validar($request);
+        $datos = $this->validar($request, $user);
 
         $aula = DB::transaction(function () use ($datos, $user) {
             $aula = Aula::create($datos + ['docente_id' => $user->id, 'estado' => 'activa']);
@@ -161,12 +163,21 @@ class AulaController extends Controller
             ->when($vistoAt, fn ($q) => $q->where('created_at', '>', $vistoAt))
             ->count();
 
+        // Alumnos de la institución que todavía no están en el aula (para agregarlos)
+        $alumnosInstitucion = collect();
+        if ($puedeEditar && $aula->institucion_id) {
+            $enAula = DB::table('aula_user')->where('aula_id', $aula->id)->where('estado', 'activo')->pluck('user_id');
+            $alumnosInstitucion = $aula->institucion->alumnos()->wherePivot('activo', true)
+                ->whereNotIn('users.id', $enAula)
+                ->orderBy('apellido')->orderBy('name')->get();
+        }
+
         $docentes = $aula->docentes()->orderBy('apellido')->orderBy('name')->get();
         $alumnos  = $aula->alumnos()->orderBy('apellido')->orderBy('name')->get();
 
         return view('aulas.show', compact(
             'aula', 'unidades', 'clasesPorUnidad', 'tareasPorUnidad', 'evaluacionesPorUnidad',
-            'misEntregas', 'misIntentos', 'rindieron', 'pendientes', 'ultimoAviso', 'nuevosMuro',
+            'misEntregas', 'misIntentos', 'rindieron', 'pendientes', 'ultimoAviso', 'nuevosMuro', 'alumnosInstitucion',
             'docentes', 'alumnos', 'puedeEditar'
         ));
     }
@@ -177,14 +188,18 @@ class AulaController extends Controller
     {
         $this->autorizarEdicion($request->user(), $aula);
 
-        return view('aulas.form', ['aula' => $aula, 'colores' => self::COLORES]);
+        return view('aulas.form', [
+            'aula'          => $aula,
+            'colores'       => self::COLORES,
+            'instituciones' => $this->institucionesPermitidas($request->user(), $aula),
+        ]);
     }
 
     public function update(Request $request, Aula $aula)
     {
         $this->autorizarEdicion($request->user(), $aula);
 
-        $aula->update($this->validar($request));
+        $aula->update($this->validar($request, $request->user(), $aula));
 
         return redirect()->route('aulas.show', $aula)->with('exito', 'Los datos del aula se actualizaron.');
     }
@@ -298,11 +313,53 @@ class AulaController extends Controller
         return redirect()->route('inicio')->with('exito', "Saliste de {$aula->nombre}.");
     }
 
+    /** Inscribir alumnos de la institución del aula. */
+    public function agregarAlumnos(Request $request, Aula $aula)
+    {
+        $this->autorizarEdicion($request->user(), $aula);
+        abort_unless($aula->institucion_id, 422, 'El aula no pertenece a una institución.');
+
+        $ids = array_map('intval', (array) $request->input('alumnos', []));
+
+        if (! $ids) {
+            return back()->with('error', 'No seleccionaste ningún alumno.');
+        }
+
+        // Solo alumnos que realmente son de la institución
+        $validos = DB::table('institucion_user')
+            ->where('institucion_id', $aula->institucion_id)->where('rol', 'alumno')->where('activo', true)
+            ->whereIn('user_id', $ids)->pluck('user_id');
+
+        $hoy = Carbon::now('America/Argentina/Buenos_Aires')->toDateString();
+        $agregados = 0;
+
+        foreach ($validos as $id) {
+            $pivot = DB::table('aula_user')->where('aula_id', $aula->id)->where('user_id', $id)->first();
+
+            if (! $pivot) {
+                $aula->miembros()->attach($id, ['rol' => 'alumno', 'origen' => 'institucion', 'estado' => 'activo', 'fecha_alta' => $hoy]);
+                $agregados++;
+            } elseif ($pivot->estado !== 'activo') {
+                $aula->miembros()->updateExistingPivot($id, ['estado' => 'activo', 'fecha_alta' => $hoy, 'fecha_baja' => null]);
+                $agregados++;
+            }
+        }
+
+        return back()->with('exito', $agregados === 1 ? 'Se agregó 1 alumno al aula.' : "Se agregaron {$agregados} alumnos al aula.");
+    }
+
     // ===================== Ayudas =====================
 
-    protected function validar(Request $request): array
+    protected function validar(Request $request, User $user, ?Aula $aula = null): array
     {
+        $permitidas = $this->institucionesPermitidas($user, $aula)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
         $datos = $request->validate([
+            'institucion_id' => ['nullable', 'integer', function ($attr, $valor, $fallar) use ($permitidas) {
+                if ($valor && ! in_array((int) $valor, $permitidas, true)) {
+                    $fallar('No formás parte de esa institución.');
+                }
+            }],
             'materia'       => 'required|string|max:120',
             'curso'         => 'nullable|string|max:30',
             'division'      => 'nullable|string|max:30',
@@ -316,6 +373,8 @@ class AulaController extends Controller
             'descripcion'   => 'descripción',
             'division'      => 'división',
         ]);
+
+        $datos['institucion_id'] = ! empty($datos['institucion_id']) ? (int) $datos['institucion_id'] : null;
 
         return $datos + [
             'alumnos_publican' => $request->boolean('alumnos_publican'),
@@ -331,6 +390,18 @@ class AulaController extends Controller
     protected function soloDocentes(User $user): void
     {
         abort_unless($user->esDocente() || $user->esSuperadmin(), 403, 'Solo los docentes pueden crear aulas.');
+    }
+
+    /** Instituciones que el docente puede asignar al aula (las suyas + la actual del aula). */
+    protected function institucionesPermitidas(User $user, ?Aula $aula = null)
+    {
+        $lista = $user->institucionesDocente()->orderBy('nombre')->get()->unique('id')->values();
+
+        if ($aula && $aula->institucion && ! $lista->contains('id', $aula->institucion_id)) {
+            $lista->push($aula->institucion);
+        }
+
+        return $lista;
     }
 
     protected function autorizarEdicion(User $user, Aula $aula): void

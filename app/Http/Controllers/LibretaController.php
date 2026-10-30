@@ -15,7 +15,8 @@ class LibretaController extends Controller
         $user = $request->user();
         abort_unless($aula->puedeVer($user), 403);
 
-        $esDocente   = $aula->puedeEditar($user);
+        // Docentes del aula y administradores de la institución ven la planilla completa
+        $esDocente   = $aula->puedeSupervisar($user);
         $contarCeros = $request->boolean('ceros');
 
         // El alumno solo ve su propia fila
@@ -31,7 +32,7 @@ class LibretaController extends Controller
     /** Exporta a Excel (tabla HTML que Excel abre como planilla, sin paquetes externos). */
     public function exportar(Request $request, Aula $aula, LibretaService $libreta)
     {
-        abort_unless($aula->puedeEditar($request->user()), 403);
+        abort_unless($aula->puedeSupervisar($request->user()), 403);
 
         $contarCeros = $request->boolean('ceros');
         $datos       = $libreta->armar($aula, $contarCeros);

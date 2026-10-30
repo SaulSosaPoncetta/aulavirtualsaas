@@ -69,6 +69,23 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /** Instituciones donde puede crear aulas (docente o administrador). */
+    public function institucionesDocente()
+    {
+        return $this->instituciones()->wherePivotIn('rol', ['docente', 'admin'])->wherePivot('activo', true);
+    }
+
+    /** Instituciones que administra. */
+    public function institucionesAdmin()
+    {
+        return $this->instituciones()->wherePivot('rol', 'admin')->wherePivot('activo', true);
+    }
+
+    public function administraInstituciones(): bool
+    {
+        return $this->institucionesAdmin()->exists();
+    }
+
     // Aulas de las que es titular
     public function aulasTitular()
     {

@@ -33,6 +33,10 @@
                 <i class="bi bi-journal-plus display-4 text-primary"></i>
                 @if ($estado === 'archivada')
                     <p class="mt-3 mb-0 text-muted">No tenés aulas archivadas.</p>
+                @elseif (auth()->user()->administraInstituciones() && ! auth()->user()->esDocente())
+                    <h2 class="h5 mt-3">Administrás una institución</h2>
+                    <p class="text-muted">Desde el panel de la institución ves sus aulas, docentes y alumnos.</p>
+                    <a href="{{ route('instituciones.index') }}" class="btn btn-primary"><i class="bi bi-building me-1"></i> Ir a instituciones</a>
                 @elseif (auth()->user()->esDocente())
                     <h2 class="h5 mt-3">Todavía no tenés aulas</h2>
                     <p class="text-muted">Creá tu primera aula y compartí el código con tus alumnos.</p>

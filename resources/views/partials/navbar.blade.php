@@ -17,16 +17,15 @@
                         <i class="bi bi-journal-bookmark me-1"></i> Mis aulas
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="bi bi-calendar-event me-1"></i> Calendario
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="bi bi-chat-dots me-1"></i> Mensajes
-                    </a>
-                </li>
+                @auth
+                    @if (auth()->user()->esDocente() || auth()->user()->administraInstituciones())
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('instituciones.*') ? 'active' : '' }}" href="{{ route('instituciones.index') }}">
+                                <i class="bi bi-building me-1"></i> Instituciones
+                            </a>
+                        </li>
+                    @endif
+                @endauth
             </ul>
 
             <ul class="navbar-nav">

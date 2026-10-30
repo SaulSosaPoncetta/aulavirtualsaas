@@ -296,9 +296,13 @@
 
             <div class="card">
                 <div class="card-body">
-                    <h2 class="h6 fw-bold mb-3">
-                        <i class="bi bi-people me-1"></i>Alumnos
-                        <span class="badge bg-primary ms-1">{{ $alumnos->count() }}</span>
+                    <h2 class="h6 fw-bold mb-3 d-flex align-items-center">
+                        <span><i class="bi bi-people me-1"></i>Alumnos <span class="badge bg-primary ms-1">{{ $alumnos->count() }}</span></span>
+                        @if ($alumnosInstitucion->isNotEmpty())
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modalAlumnosInst">
+                                <i class="bi bi-person-plus me-1"></i>De la institución
+                            </button>
+                        @endif
                     </h2>
 
                     @forelse ($alumnos as $a)
@@ -329,7 +333,7 @@
                 </div>
             </div>
 
-            @if (! $puedeEditar && $aula->docente_id != auth()->id())
+            @if (! $puedeEditar && $aula->esMiembro(auth()->user()))
                 <form method="POST" action="{{ route('aulas.salir', $aula) }}" class="mt-3 text-center"
                       data-confirmar="¿Salir de esta aula? Para volver vas a necesitar el código.">
                     @csrf
@@ -338,6 +342,41 @@
             @endif
         </div>
     </div>
+    @if ($alumnosInstitucion->isNotEmpty())
+        {{-- Modal: agregar alumnos de la institución --}}
+        <div class="modal fade" id="modalAlumnosInst" tabindex="-1" aria-labelledby="modalAlumnosInstTitulo" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <form method="POST" action="{{ route('aulas.alumnos.agregar', $aula) }}" class="modal-content">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalAlumnosInstTitulo"><i class="bi bi-person-plus me-2"></i>Alumnos de {{ $aula->institucion->nombre }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="search" class="form-control mb-3" id="filtroAlumnosInst" placeholder="Buscar por apellido, nombre o DNI">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="todosAlumnosInst">
+                            <label class="form-check-label fw-semibold" for="todosAlumnosInst">Seleccionar todos los visibles</label>
+                        </div>
+                        <div class="list-group" id="listaAlumnosInst">
+                            @foreach ($alumnosInstitucion as $ai)
+                                <label class="list-group-item d-flex gap-2 align-items-center" data-buscar="{{ mb_strtolower($ai->apellido . ' ' . $ai->name . ' ' . $ai->dni) }}">
+                                    <input class="form-check-input mt-0" type="checkbox" name="alumnos[]" value="{{ $ai->id }}">
+                                    <span class="flex-grow-1">{{ $ai->nombre_completo }}</span>
+                                    <span class="small text-muted">{{ $ai->dni }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Agregar al aula</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
     @if ($puedeEditar)
         {{-- Modal: crear / editar unidad --}}
         <div class="modal fade" id="modalUnidad" tabindex="-1" aria-labelledby="modalUnidadTitulo" aria-hidden="true">
@@ -390,6 +429,19 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('unidadVisible').checked = b.dataset.visible === '1';
             document.getElementById('modalUnidadTitulo').innerHTML =
                 '<i class="bi bi-folder2-open me-2"></i>' + (b.dataset.metodo === 'PUT' ? 'Editar unidad' : 'Nueva unidad');
+        });
+    }
+
+    // Filtro y "seleccionar todos" de alumnos de la institución
+    const filtro = document.getElementById('filtroAlumnosInst');
+    if (filtro) {
+        const filas = [...document.querySelectorAll('#listaAlumnosInst [data-buscar]')];
+        filtro.addEventListener('input', () => {
+            const t = filtro.value.trim().toLowerCase();
+            filas.forEach(f => f.classList.toggle('d-none', t !== '' && !f.dataset.buscar.includes(t)));
+        });
+        document.getElementById('todosAlumnosInst').addEventListener('change', (e) => {
+            filas.filter(f => !f.classList.contains('d-none')).forEach(f => f.querySelector('input').checked = e.target.checked);
         });
     }
 

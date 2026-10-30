@@ -5,6 +5,8 @@ use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
 use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\EvaluacionController;
+use App\Http\Controllers\ImportarAlumnosController;
+use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\IntentoController;
 use App\Http\Controllers\LibretaController;
 use App\Http\Controllers\MuroController;
@@ -50,6 +52,7 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::patch('/aulas/{aula}/codigo/alternar', [AulaController::class, 'alternarCodigo'])->name('aulas.codigo.alternar');
     Route::patch('/aulas/{aula}/miembros/{user}/baja', [AulaController::class, 'bajaMiembro'])->name('aulas.miembros.baja');
     Route::post('/aulas/{aula}/salir', [AulaController::class, 'salir'])->name('aulas.salir');
+    Route::post('/aulas/{aula}/alumnos', [AulaController::class, 'agregarAlumnos'])->name('aulas.alumnos.agregar');
 
     // Unidades del aula
     Route::post('/aulas/{aula}/unidades', [UnidadController::class, 'store'])->name('unidades.store');
@@ -115,6 +118,26 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::patch('/publicaciones/{publicacion}/fijar', [MuroController::class, 'fijar'])->name('muro.fijar');
     Route::post('/publicaciones/{publicacion}/comentarios', [MuroController::class, 'comentar'])->middleware('throttle:60,1')->name('muro.comentar');
     Route::delete('/comentarios/{comentario}', [MuroController::class, 'borrarComentario'])->name('muro.comentarios.destroy');
+
+    // Instituciones
+    Route::get('/instituciones', [InstitucionController::class, 'index'])->name('instituciones.index');
+    Route::get('/instituciones/crear', [InstitucionController::class, 'create'])->name('instituciones.create');
+    Route::post('/instituciones', [InstitucionController::class, 'store'])->name('instituciones.store');
+    Route::post('/instituciones/unirse', [InstitucionController::class, 'unirse'])->middleware('throttle:20,1')->name('instituciones.unirse');
+    Route::get('/instituciones/{institucion}', [InstitucionController::class, 'show'])->name('instituciones.show');
+    Route::get('/instituciones/{institucion}/editar', [InstitucionController::class, 'edit'])->name('instituciones.edit');
+    Route::put('/instituciones/{institucion}', [InstitucionController::class, 'update'])->name('instituciones.update');
+    Route::patch('/instituciones/{institucion}/codigo', [InstitucionController::class, 'regenerarCodigo'])->name('instituciones.codigo.regenerar');
+    Route::post('/instituciones/{institucion}/salir', [InstitucionController::class, 'salir'])->name('instituciones.salir');
+    Route::patch('/instituciones/{institucion}/admin/{user}', [InstitucionController::class, 'alternarAdmin'])->name('instituciones.admin.alternar');
+    Route::delete('/instituciones/{institucion}/miembros/{user}/{rol}', [InstitucionController::class, 'quitarMiembro'])
+        ->whereIn('rol', ['docente', 'alumno'])->name('instituciones.miembros.quitar');
+    Route::patch('/instituciones/{institucion}/alumnos/{user}/password', [InstitucionController::class, 'restablecerPassword'])->name('instituciones.alumnos.password');
+
+    // Carga masiva de alumnos
+    Route::get('/instituciones/{institucion}/importar', [ImportarAlumnosController::class, 'form'])->name('instituciones.importar');
+    Route::get('/instituciones/{institucion}/importar/plantilla', [ImportarAlumnosController::class, 'plantilla'])->name('instituciones.importar.plantilla');
+    Route::post('/instituciones/{institucion}/importar', [ImportarAlumnosController::class, 'procesar'])->name('instituciones.importar.procesar');
 
     // Archivos de tareas y entregas
     Route::get('/archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])->name('archivos.descargar');

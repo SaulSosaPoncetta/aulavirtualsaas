@@ -168,9 +168,20 @@ class Aula extends Model
             ->exists();
     }
 
-    /** Miembro activo o superadmin. */
+    /** Miembro activo, administrador de la institución del aula o superadmin. */
     public function puedeVer(User $user): bool
     {
-        return $user->esSuperadmin() || $this->esMiembro($user);
+        return $user->esSuperadmin() || $this->esMiembro($user) || $this->esAdminInstitucion($user);
+    }
+
+    /** Puede ver todo el seguimiento (libreta completa): docentes del aula y administradores de la institución. */
+    public function puedeSupervisar(User $user): bool
+    {
+        return $this->puedeEditar($user) || $this->esAdminInstitucion($user);
+    }
+
+    public function esAdminInstitucion(User $user): bool
+    {
+        return $this->institucion_id && $this->institucion && $this->institucion->esAdmin($user);
     }
 }

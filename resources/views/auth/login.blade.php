@@ -56,5 +56,10 @@
                 <i class="bi bi-backpack me-1"></i> Soy alumno
             </a>
         </div>
+        <div class="col-12">
+            <a href="{{ route('registro', ['tipo' => 'institucion']) }}" class="btn btn-link w-100 btn-sm">
+                <i class="bi bi-building me-1"></i> Registrar una institución
+            </a>
+        </div>
     </div>
 @endsection
