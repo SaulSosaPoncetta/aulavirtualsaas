@@ -46,7 +46,12 @@ class AulaController extends Controller
         $this->soloDocentes($request->user());
 
         return view('aulas.form', [
-            'aula'    => new Aula(['ciclo_lectivo' => $this->anioActual(), 'color' => self::COLORES[0]]),
+            'aula'    => new Aula([
+                'ciclo_lectivo'    => $this->anioActual(),
+                'color'            => self::COLORES[0],
+                'alumnos_publican' => false,
+                'alumnos_comentan' => true,
+            ]),
             'colores' => self::COLORES,
         ]);
     }
@@ -146,12 +151,22 @@ class AulaController extends Controller
                     ->map(fn ($e) => ['titulo' => $e->titulo, 'fecha' => $e->fecha_cierre, 'url' => route('evaluaciones.show', $e), 'tipo' => 'Evaluación']))
                 ->sortBy(fn ($x) => $x['fecha']->getTimestamp())->take(5)->values();
 
+        // Muro: último aviso (fijado o más reciente) y cantidad de novedades
+        $ultimoAviso = $aula->publicaciones()->with('autor')
+            ->orderByDesc('fijada')->orderByDesc('created_at')->first();
+
+        $vistoAt = DB::table('aula_user')->where('aula_id', $aula->id)->where('user_id', $user->id)->value('muro_visto_at');
+        $nuevosMuro = $aula->publicaciones()
+            ->where('user_id', '!=', $user->id)
+            ->when($vistoAt, fn ($q) => $q->where('created_at', '>', $vistoAt))
+            ->count();
+
         $docentes = $aula->docentes()->orderBy('apellido')->orderBy('name')->get();
         $alumnos  = $aula->alumnos()->orderBy('apellido')->orderBy('name')->get();
 
         return view('aulas.show', compact(
             'aula', 'unidades', 'clasesPorUnidad', 'tareasPorUnidad', 'evaluacionesPorUnidad',
-            'misEntregas', 'misIntentos', 'rindieron', 'pendientes',
+            'misEntregas', 'misIntentos', 'rindieron', 'pendientes', 'ultimoAviso', 'nuevosMuro',
             'docentes', 'alumnos', 'puedeEditar'
         ));
     }
@@ -302,7 +317,10 @@ class AulaController extends Controller
             'division'      => 'división',
         ]);
 
-        return $datos;
+        return $datos + [
+            'alumnos_publican' => $request->boolean('alumnos_publican'),
+            'alumnos_comentan' => $request->boolean('alumnos_comentan'),
+        ];
     }
 
     protected function anioActual(): int

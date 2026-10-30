@@ -26,14 +26,18 @@ class Aula extends Model
         'color',
         'codigo_acceso',
         'codigo_activo',
+        'alumnos_publican',
+        'alumnos_comentan',
         'estado',
     ];
 
     protected function casts(): array
     {
         return [
-            'codigo_activo' => 'boolean',
-            'ciclo_lectivo' => 'integer',
+            'codigo_activo'    => 'boolean',
+            'alumnos_publican' => 'boolean',
+            'alumnos_comentan' => 'boolean',
+            'ciclo_lectivo'    => 'integer',
         ];
     }
 
@@ -78,8 +82,13 @@ class Aula extends Model
     public function miembros()
     {
         return $this->belongsToMany(User::class, 'aula_user')
-            ->withPivot('rol', 'origen', 'estado', 'fecha_alta', 'fecha_baja')
+            ->withPivot('rol', 'origen', 'estado', 'fecha_alta', 'fecha_baja', 'muro_visto_at')
             ->withTimestamps();
+    }
+
+    public function publicaciones()
+    {
+        return $this->hasMany(Publicacion::class);
     }
 
     public function docentes()

@@ -90,6 +90,20 @@
                             @error('color')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                         </div>
 
+                        <div class="mb-4">
+                            <label class="form-label d-block">Muro del aula</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="alumnos_comentan" name="alumnos_comentan" value="1"
+                                       @checked(old('alumnos_comentan', $aula->alumnos_comentan))>
+                                <label class="form-check-label" for="alumnos_comentan">Los alumnos pueden comentar</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="alumnos_publican" name="alumnos_publican" value="1"
+                                       @checked(old('alumnos_publican', $aula->alumnos_publican))>
+                                <label class="form-check-label" for="alumnos_publican">Los alumnos pueden hacer publicaciones</label>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{{ $aula->exists ? route('aulas.show', $aula) : route('inicio') }}" class="btn btn-outline-secondary">Cancelar</a>
                             <button type="submit" class="btn btn-primary">

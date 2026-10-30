@@ -223,3 +223,41 @@ main {
         min-width: 90px;
     }
 }
+
+// Muro
+.avatar-muro {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background-color: $gray-300;
+    color: $pizarra;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+
+    &.avatar-docente {
+        background-color: $teal-oscuro;
+        color: #fff;
+    }
+
+    &.avatar-chico {
+        width: 28px;
+        height: 28px;
+        font-size: .8rem;
+    }
+}
+
+.contenido-muro {
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: pre-line;
+}

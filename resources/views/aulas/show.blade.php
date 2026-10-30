@@ -21,7 +21,13 @@
                 @endif
             </div>
 
-            <div class="d-flex gap-2 align-items-start">
+            <div class="d-flex flex-wrap gap-2 align-items-start">
+            <a href="{{ route('muro.index', $aula) }}" class="btn btn-light btn-sm position-relative">
+                <i class="bi bi-megaphone me-1"></i> Muro
+                @if ($nuevosMuro)
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $nuevosMuro }}</span>
+                @endif
+            </a>
             <a href="{{ route('libreta.index', $aula) }}" class="btn btn-light btn-sm">
                 <i class="bi bi-table me-1"></i> {{ $puedeEditar ? 'Calificaciones' : 'Mis notas' }}
             </a>
@@ -68,6 +74,22 @@
                         <p class="mb-0" style="white-space: pre-line">{{ $aula->descripcion }}</p>
                     </div>
                 </div>
+            @endif
+
+            @if ($ultimoAviso)
+                <a href="{{ route('muro.index', $aula) }}#pub{{ $ultimoAviso->id }}" class="card mb-4 text-decoration-none text-reset border-primary-subtle">
+                    <div class="card-body d-flex gap-3 align-items-start">
+                        <i class="bi {{ $ultimoAviso->fijada ? 'bi-pin-angle-fill' : 'bi-megaphone' }} fs-4 text-primary"></i>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="small text-muted mb-1">
+                                {{ $ultimoAviso->fijada ? 'Aviso fijado' : 'Último en el muro' }} ·
+                                {{ $ultimoAviso->autor?->nombre_completo }} · {{ $ultimoAviso->created_at->format('d/m H:i') }}
+                            </div>
+                            <div class="text-truncate-3">{{ \Illuminate\Support\Str::limit($ultimoAviso->texto, 280) }}</div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </div>
+                </a>
             @endif
 
             @if ($puedeEditar && $aula->estado === 'activa')

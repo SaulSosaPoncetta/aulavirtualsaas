@@ -7,6 +7,7 @@ use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\IntentoController;
 use App\Http\Controllers\LibretaController;
+use App\Http\Controllers\MuroController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\TareaController;
@@ -105,6 +106,15 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     // Libreta de calificaciones
     Route::get('/aulas/{aula}/calificaciones', [LibretaController::class, 'index'])->name('libreta.index');
     Route::get('/aulas/{aula}/calificaciones/excel', [LibretaController::class, 'exportar'])->name('libreta.exportar');
+
+    // Muro del aula
+    Route::get('/aulas/{aula}/muro', [MuroController::class, 'index'])->name('muro.index');
+    Route::post('/aulas/{aula}/muro', [MuroController::class, 'store'])->middleware('throttle:30,1')->name('muro.store');
+    Route::put('/publicaciones/{publicacion}', [MuroController::class, 'update'])->name('muro.update');
+    Route::delete('/publicaciones/{publicacion}', [MuroController::class, 'destroy'])->name('muro.destroy');
+    Route::patch('/publicaciones/{publicacion}/fijar', [MuroController::class, 'fijar'])->name('muro.fijar');
+    Route::post('/publicaciones/{publicacion}/comentarios', [MuroController::class, 'comentar'])->middleware('throttle:60,1')->name('muro.comentar');
+    Route::delete('/comentarios/{comentario}', [MuroController::class, 'borrarComentario'])->name('muro.comentarios.destroy');
 
     // Archivos de tareas y entregas
     Route::get('/archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])->name('archivos.descargar');
