@@ -261,3 +261,235 @@ main {
     overflow: hidden;
     white-space: pre-line;
 }
+
+// ============================================================
+// Landing page
+// ============================================================
+.landing {
+    display: block;
+    background-color: #fff;
+    scroll-behavior: smooth;
+
+    section[id] {
+        scroll-margin-top: 70px;
+    }
+}
+
+.landing-nav {
+    background-color: rgba(#fff, .96);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .06);
+
+    .navbar-brand { color: $pizarra; }
+    .nav-link { color: $pizarra; font-weight: 500; }
+    .nav-link:hover { color: $teal-oscuro; }
+}
+
+.landing-hero {
+    background:
+        radial-gradient(circle at 85% 15%, rgba($ambar, .25), transparent 40%),
+        linear-gradient(150deg, $teal-profundo 0%, $teal-oscuro 55%, darken($teal-oscuro, 6%) 100%);
+    color: #fff;
+    padding: 5rem 0 6rem;
+
+    .lead { color: rgba(#fff, .85); }
+}
+
+.text-resaltado {
+    color: $ambar;
+}
+
+.landing-chip {
+    display: inline-block;
+    padding: .3rem .8rem;
+    border-radius: 999px;
+    background-color: rgba(#fff, .15);
+    font-size: .85rem;
+    font-weight: 600;
+
+    &.landing-chip-claro {
+        background-color: rgba($teal-oscuro, .1);
+        color: $teal-oscuro;
+    }
+}
+
+.landing-mock {
+    background-color: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, .3);
+    color: $pizarra;
+    overflow: hidden;
+    transform: rotate(1.5deg);
+    transition: transform .3s ease;
+
+    &:hover { transform: rotate(0); }
+}
+
+.landing-mock-barra {
+    background-color: $gray-200;
+    padding: .5rem .75rem;
+    display: flex;
+    gap: .35rem;
+
+    span {
+        width: 10px; height: 10px; border-radius: 50%;
+        background-color: $gray-400;
+        &:first-child { background-color: #F87171; }
+        &:nth-child(2) { background-color: $ambar; }
+        &:nth-child(3) { background-color: #34D399; }
+    }
+}
+
+.landing-mock-portada {
+    background: linear-gradient(135deg, $teal-oscuro, $teal-claro);
+    color: #fff;
+    padding: 1.25rem;
+}
+
+.landing-mock-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .65rem .5rem;
+    border-bottom: 1px solid $gray-200;
+    font-size: .9rem;
+
+    > i { font-size: 1.4rem; }
+    span { color: $secondary; font-size: .8rem; }
+    &:last-child { border-bottom: 0; }
+}
+
+.landing-card,
+.landing-plan {
+    border: 1px solid $gray-200;
+    border-radius: 1rem;
+    padding: 2rem;
+    background-color: #fff;
+    transition: box-shadow .2s ease, transform .2s ease;
+
+    &:hover {
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .08);
+        transform: translateY(-3px);
+    }
+}
+
+.landing-icono {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background-color: rgba($teal-oscuro, .1);
+    color: $teal-oscuro;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+}
+
+.landing-gris {
+    background-color: $fondo;
+}
+
+.landing-funcion {
+    background-color: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid rgba($teal-oscuro, .08);
+
+    > i {
+        font-size: 1.8rem;
+        color: $teal-oscuro;
+    }
+}
+
+.landing-paso {
+    text-align: center;
+    padding: 1rem;
+}
+
+.landing-paso-numero {
+    width: 52px; height: 52px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background-color: $ambar;
+    color: $pizarra;
+    font-weight: 800;
+    font-size: 1.3rem;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 6px rgba($ambar, .2);
+}
+
+.landing-oscuro {
+    background: linear-gradient(160deg, $pizarra 0%, darken($teal-profundo, 8%) 100%);
+}
+
+.landing-lista li {
+    display: flex;
+    gap: .75rem;
+    margin-bottom: .75rem;
+
+    i { color: $ambar; font-size: 1.2rem; }
+}
+
+.landing-dato {
+    background-color: rgba(#fff, .07);
+    border: 1px solid rgba(#fff, .12);
+    border-radius: 1rem;
+    padding: 1.5rem;
+
+    i { font-size: 1.8rem; color: $ambar; display: block; margin-bottom: .5rem; }
+}
+
+.landing-plan {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    &.landing-plan-destacado {
+        border: 2px solid $teal-oscuro;
+        box-shadow: 0 16px 40px rgba($teal-oscuro, .15);
+    }
+}
+
+.landing-plan-cinta {
+    position: absolute;
+    top: -14px;
+    right: 1.5rem;
+    background-color: $ambar;
+    color: $pizarra;
+    font-size: .8rem;
+    font-weight: 700;
+    padding: .3rem .8rem;
+    border-radius: 999px;
+}
+
+.landing-precio {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: $pizarra;
+
+    span { font-size: 1rem; font-weight: 500; color: $secondary; }
+}
+
+.landing-incluye li {
+    margin-bottom: .5rem;
+
+    i { color: $teal-oscuro; margin-right: .5rem; font-weight: 700; }
+}
+
+.landing-calculadora {
+    background-color: $fondo;
+    border-radius: .75rem;
+    padding: 1rem;
+}
+
+.landing-cta {
+    background: linear-gradient(135deg, $teal-oscuro, $teal-profundo);
+}
+
+.landing-pie {
+    background-color: $pizarra;
+    color: rgba(#fff, .75);
+}
+
+@media (max-width: 991.98px) {
+    .landing-hero { padding: 3rem 0 4rem; }
+    .landing-mock { transform: none; }
+}

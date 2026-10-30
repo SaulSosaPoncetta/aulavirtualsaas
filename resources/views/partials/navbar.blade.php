@@ -18,6 +18,13 @@
                     </a>
                 </li>
                 @auth
+                    @if (auth()->user()->esSuperadmin())
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.panel') }}">
+                                <i class="bi bi-shield-lock me-1"></i> Administración
+                            </a>
+                        </li>
+                    @endif
                     @if (auth()->user()->esDocente() || auth()->user()->administraInstituciones())
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('instituciones.*') ? 'active' : '' }}" href="{{ route('instituciones.index') }}">

@@ -13,7 +13,9 @@
     <div class="login-caja w-100 @yield('ancho')">
 
         <div class="text-center mb-4">
-            <div class="login-logo mb-2"><i class="bi @yield('icono', 'bi-mortarboard-fill')"></i></div>
+            <a href="{{ route('landing') }}" class="text-decoration-none" title="Ir a la página principal">
+                <div class="login-logo mb-2"><i class="bi @yield('icono', 'bi-mortarboard-fill')"></i></div>
+            </a>
             <h1 class="h3 fw-bold mb-1">@yield('encabezado', 'Aula Virtual')</h1>
             <p class="text-muted mb-0">@yield('subtitulo')</p>
         </div>

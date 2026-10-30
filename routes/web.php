@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbonoController;
+use App\Http\Controllers\Admin;
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\ImportarAlumnosController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\IntentoController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LibretaController;
 use App\Http\Controllers\MuroController;
 use App\Http\Controllers\PreguntaController;
@@ -20,8 +22,12 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarPasswordController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Middleware\RequiereCambioPassword;
+use App\Http\Middleware\SoloSuperadmin;
 use App\Http\Middleware\VerificarAbono;
 use Illuminate\Support\Facades\Route;
+
+// ===================== Página pública =====================
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // ===================== Invitados =====================
 Route::middleware('guest')->group(function () {
@@ -44,8 +50,8 @@ Route::middleware(['auth', RequiereCambioPassword::class, VerificarAbono::class]
     Route::get('/cambiar-password', [CambiarPasswordController::class, 'create'])->name('password.cambiar');
     Route::post('/cambiar-password', [CambiarPasswordController::class, 'store'])->name('password.actualizar');
 
-    // Mis aulas (pantalla de inicio)
-    Route::get('/', [AulaController::class, 'index'])->name('inicio');
+    // Mis aulas (pantalla de inicio una vez logueado)
+    Route::get('/aulas', [AulaController::class, 'index'])->name('inicio');
 
     Route::post('/aulas/unirse', [AulaController::class, 'unirse'])->middleware('throttle:20,1')->name('aulas.unirse');
     Route::resource('aulas', AulaController::class)->except('index');
@@ -149,6 +155,29 @@ Route::middleware(['auth', RequiereCambioPassword::class, VerificarAbono::class]
     Route::post('/instituciones/{institucion}/abono', [AbonoController::class, 'pagarInstitucion'])->middleware('throttle:10,1')->name('abonos.institucion.pagar');
     Route::patch('/pagos/{pago}/cancelar', [AbonoController::class, 'cancelar'])->name('abonos.cancelar');
     Route::get('/pagos/{pago}/comprobante', [AbonoController::class, 'comprobante'])->name('abonos.comprobante');
+
+    // ===================== Administración (superadmin) =====================
+    Route::middleware(SoloSuperadmin::class)->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', [Admin\PanelController::class, 'index'])->name('panel');
+
+        Route::get('/pagos', [Admin\PagoController::class, 'index'])->name('pagos.index');
+        Route::get('/pagos/registrar', [Admin\PagoController::class, 'crear'])->name('pagos.crear');
+        Route::post('/pagos', [Admin\PagoController::class, 'guardar'])->name('pagos.guardar');
+        Route::patch('/pagos/{pago}/aprobar', [Admin\PagoController::class, 'aprobar'])->name('pagos.aprobar');
+        Route::patch('/pagos/{pago}/rechazar', [Admin\PagoController::class, 'rechazar'])->name('pagos.rechazar');
+
+        Route::get('/abonos', [Admin\SuscripcionController::class, 'index'])->name('abonos.index');
+        Route::patch('/abonos/{abono}', [Admin\SuscripcionController::class, 'ajustar'])->name('abonos.ajustar');
+
+        Route::get('/precios', [Admin\PlanController::class, 'index'])->name('planes.index');
+        Route::post('/precios', [Admin\PlanController::class, 'store'])->name('planes.store');
+        Route::put('/precios/{plan}', [Admin\PlanController::class, 'update'])->name('planes.update');
+        Route::delete('/precios/{plan}', [Admin\PlanController::class, 'destroy'])->name('planes.destroy');
+
+        Route::get('/usuarios', [Admin\UsuarioController::class, 'index'])->name('usuarios.index');
+        Route::patch('/usuarios/{user}/activo', [Admin\UsuarioController::class, 'alternarActivo'])->name('usuarios.activo');
+        Route::patch('/usuarios/{user}/password', [Admin\UsuarioController::class, 'restablecerPassword'])->name('usuarios.password');
+    });
 
     // Archivos de tareas y entregas
     Route::get('/archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])->name('archivos.descargar');
