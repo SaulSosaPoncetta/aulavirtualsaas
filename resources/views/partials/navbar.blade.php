@@ -42,6 +42,12 @@
                                 </span>
                             </li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Mi perfil</a></li>
+                            @if (auth()->user()->esDocente())
+                                <li><a class="dropdown-item" href="{{ route('abonos.mio') }}"><i class="bi bi-credit-card me-2"></i>Mi abono</a></li>
+                            @endif
+                            @foreach (auth()->user()->institucionesAdmin()->get()->unique('id') as $instAdm)
+                                <li><a class="dropdown-item" href="{{ route('abonos.institucion', $instAdm) }}"><i class="bi bi-building me-2"></i>Abono {{ \Illuminate\Support\Str::limit($instAdm->nombre, 22) }}</a></li>
+                            @endforeach
                             <li>
                                 <a class="dropdown-item" href="{{ route('password.cambiar') }}">
                                     <i class="bi bi-key me-2"></i>Cambiar contraseña

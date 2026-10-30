@@ -65,6 +65,22 @@ class Institucion extends Model
         return $this->hasMany(Aula::class);
     }
 
+    public function abono()
+    {
+        return $this->hasOne(Abono::class);
+    }
+
+    public function abonoActivo(): bool
+    {
+        return $this->abono && $this->abono->estaActivo();
+    }
+
+    /** ¿El docente ya ocupa un lugar (rol docente) en la institución? */
+    public function ocupaLugar(User $user): bool
+    {
+        return $this->usuarios()->where('users.id', $user->id)->wherePivot('rol', 'docente')->wherePivot('activo', true)->exists();
+    }
+
     public const NIVELES = [
         'inicial'       => 'Inicial',
         'primaria'      => 'Primaria',

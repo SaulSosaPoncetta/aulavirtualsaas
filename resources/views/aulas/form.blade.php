@@ -64,12 +64,15 @@
                         <div class="mb-3">
                             <label for="institucion_id" class="form-label">¿De quién es el aula?</label>
                             <select class="form-select @error('institucion_id') is-invalid @enderror" id="institucion_id" name="institucion_id">
-                                <option value="">Personal (la uso por mi cuenta)</option>
+                                <option value="" @disabled(! $personalActivo)>Personal (la uso por mi cuenta){{ $personalActivo ? '' : ' — requiere abono' }}</option>
                                 @foreach ($instituciones as $inst)
-                                    <option value="{{ $inst->id }}" @selected((string) old('institucion_id', $aula->institucion_id) === (string) $inst->id)>{{ $inst->nombre }}</option>
+                                    <option value="{{ $inst->id }}" @selected((string) old('institucion_id', $aula->institucion_id ?? (! $personalActivo && $loop->first ? $inst->id : null)) === (string) $inst->id)>{{ $inst->nombre }}</option>
                                 @endforeach
                             </select>
                             @error('institucion_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            @unless ($personalActivo)
+                                <div class="small text-muted mt-1">Para aulas personales necesitás tu abono: <a href="{{ route('abonos.mio') }}">activarlo</a>.</div>
+                            @endunless
                             <div class="form-text">
                                 Si es de una institución, la escuela puede verla y sumar a sus alumnos.
                                 @if ($instituciones->isEmpty())

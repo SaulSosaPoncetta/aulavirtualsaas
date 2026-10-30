@@ -86,6 +86,17 @@ class User extends Authenticatable
         return $this->institucionesAdmin()->exists();
     }
 
+    public function abono()
+    {
+        return $this->hasOne(Abono::class);
+    }
+
+    /** ¿Tiene el abono unipersonal al día? (el superadmin no paga) */
+    public function abonoActivo(): bool
+    {
+        return $this->esSuperadmin() || ($this->abono && $this->abono->estaActivo());
+    }
+
     // Aulas de las que es titular
     public function aulasTitular()
     {

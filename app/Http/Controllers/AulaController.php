@@ -43,10 +43,19 @@ class AulaController extends Controller
 
     public function create(Request $request)
     {
-        $this->soloDocentes($request->user());
+        $user = $request->user();
+        $this->soloDocentes($user);
+
+        // Necesita abono personal al día o una institución con abono activo
+        $institucionesActivas = $user->institucionesDocente()->with('abono')->get()->unique('id')->filter->abonoActivo();
+        if (! $user->abonoActivo() && $institucionesActivas->isEmpty()) {
+            return redirect()->route('abonos.mio')
+                ->with('error', 'Para crear aulas necesitás un abono activo (o sumarte a una institución que tenga abono).');
+        }
 
         return view('aulas.form', [
-            'instituciones' => $request->user()->institucionesDocente()->orderBy('nombre')->get()->unique('id')->values(),
+            'instituciones' => $institucionesActivas->sortBy('nombre')->values(),
+            'personalActivo' => $user->abonoActivo(),
             'aula'    => new Aula([
                 'institucion_id'   => $request->query('institucion'),
                 'ciclo_lectivo'    => $this->anioActual(),
@@ -65,7 +74,19 @@ class AulaController extends Controller
 
         $datos = $this->validar($request, $user);
 
+        if ($error = $this->verificarAbonoParaCrear($user, $datos['institucion_id'])) {
+            return back()->withInput()->with('error', $error);
+        }
+
         $aula = DB::transaction(function () use ($datos, $user) {
+            // Un administrador que crea un aula pasa a ocupar un lugar de docente
+            if ($datos['institucion_id']) {
+                $inst = \App\Models\Institucion::find($datos['institucion_id']);
+                if (! $inst->ocupaLugar($user)) {
+                    $inst->usuarios()->attach($user->id, ['rol' => 'docente', 'activo' => true]);
+                }
+            }
+
             $aula = Aula::create($datos + ['docente_id' => $user->id, 'estado' => 'activa']);
 
             $aula->miembros()->attach($user->id, [
@@ -91,7 +112,8 @@ class AulaController extends Controller
 
         $puedeEditar = $aula->puedeEditar($user);
 
-        $aula->load(['institucion', 'titular']);
+        $aula->load(['institucion.abono', 'titular.abono']);
+        $puedeEscribir = $user->esSuperadmin() || $aula->escrituraHabilitada();
 
         $unidades = $aula->unidades()->get();
         $clases   = $aula->clases()->with('recursos')->get();
@@ -177,7 +199,7 @@ class AulaController extends Controller
 
         return view('aulas.show', compact(
             'aula', 'unidades', 'clasesPorUnidad', 'tareasPorUnidad', 'evaluacionesPorUnidad',
-            'misEntregas', 'misIntentos', 'rindieron', 'pendientes', 'ultimoAviso', 'nuevosMuro', 'alumnosInstitucion',
+            'misEntregas', 'misIntentos', 'rindieron', 'pendientes', 'ultimoAviso', 'nuevosMuro', 'alumnosInstitucion', 'puedeEscribir',
             'docentes', 'alumnos', 'puedeEditar'
         ));
     }
@@ -191,7 +213,8 @@ class AulaController extends Controller
         return view('aulas.form', [
             'aula'          => $aula,
             'colores'       => self::COLORES,
-            'instituciones' => $this->institucionesPermitidas($request->user(), $aula),
+            'instituciones'  => $this->institucionesPermitidas($request->user(), $aula),
+            'personalActivo' => true,
         ]);
     }
 
@@ -262,6 +285,10 @@ class AulaController extends Controller
 
         if (! $aula || ! $aula->codigo_activo) {
             return back()->withInput()->with('error', 'El código no existe o está deshabilitado. Revisalo con tu docente.');
+        }
+
+        if (! $aula->escrituraHabilitada()) {
+            return back()->withInput()->with('error', 'Esa aula está en modo solo lectura por falta de abono. Avisale a tu docente.');
         }
 
         $pivot = DB::table('aula_user')->where('aula_id', $aula->id)->where('user_id', $user->id)->first();
@@ -390,6 +417,32 @@ class AulaController extends Controller
     protected function soloDocentes(User $user): void
     {
         abort_unless($user->esDocente() || $user->esSuperadmin(), 403, 'Solo los docentes pueden crear aulas.');
+    }
+
+    /** Devuelve un mensaje de error si no puede crear el aula por el abono, o null si puede. */
+    protected function verificarAbonoParaCrear(User $user, ?int $institucionId): ?string
+    {
+        if ($user->esSuperadmin()) {
+            return null;
+        }
+
+        if (! $institucionId) {
+            return $user->abonoActivo()
+                ? null
+                : 'Para crear aulas personales necesitás tu abono unipersonal activo.';
+        }
+
+        $inst = \App\Models\Institucion::with('abono')->find($institucionId);
+
+        if (! $inst->abonoActivo()) {
+            return "El abono de {$inst->nombre} no está activo. Avisale al administrador de la institución.";
+        }
+
+        if (! $inst->ocupaLugar($user) && ! $inst->abono->hayCupo()) {
+            return "{$inst->nombre} no tiene lugares de docente disponibles. El administrador tiene que ampliar el cupo.";
+        }
+
+        return null;
     }
 
     /** Instituciones que el docente puede asignar al aula (las suyas + la actual del aula). */

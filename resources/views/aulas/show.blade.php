@@ -65,6 +65,22 @@
         </div>
     </div>
 
+    @unless ($puedeEscribir)
+        <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2">
+            <i class="bi bi-lock fs-5"></i>
+            <div class="flex-grow-1">
+                <strong>Aula en modo solo lectura.</strong>
+                {{ $aula->institucion_id ? 'El abono de la institución' : 'El abono del docente' }} está vencido:
+                se puede ver todo, pero no se pueden publicar clases, tareas, evaluaciones ni entregas nuevas.
+            </div>
+            @if ($aula->institucion_id && $aula->institucion->esAdmin(auth()->user()))
+                <a href="{{ route('abonos.institucion', $aula->institucion) }}" class="btn btn-sm btn-warning">Renovar abono</a>
+            @elseif (! $aula->institucion_id && $aula->docente_id == auth()->id())
+                <a href="{{ route('abonos.mio') }}" class="btn btn-sm btn-warning">Renovar abono</a>
+            @endif
+        </div>
+    @endunless
+
     <div class="row g-4">
         {{-- Columna principal: contenido --}}
         <div class="col-lg-8">
@@ -92,7 +108,7 @@
                 </a>
             @endif
 
-            @if ($puedeEditar && $aula->estado === 'activa')
+            @if ($puedeEditar && $puedeEscribir && $aula->estado === 'activa')
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <a href="{{ route('clases.create', $aula) }}" class="btn btn-primary">
                         <i class="bi bi-plus-lg me-1"></i> Nueva clase

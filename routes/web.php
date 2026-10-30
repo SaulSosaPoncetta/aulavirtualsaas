@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AbonoController;
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarPasswordController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Middleware\RequiereCambioPassword;
+use App\Http\Middleware\VerificarAbono;
 use Illuminate\Support\Facades\Route;
 
 // ===================== Invitados =====================
@@ -36,7 +38,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // ===================== Autenticados =====================
-Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
+Route::middleware(['auth', RequiereCambioPassword::class, VerificarAbono::class])->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
     Route::get('/cambiar-password', [CambiarPasswordController::class, 'create'])->name('password.cambiar');
@@ -138,6 +140,15 @@ Route::middleware(['auth', RequiereCambioPassword::class])->group(function () {
     Route::get('/instituciones/{institucion}/importar', [ImportarAlumnosController::class, 'form'])->name('instituciones.importar');
     Route::get('/instituciones/{institucion}/importar/plantilla', [ImportarAlumnosController::class, 'plantilla'])->name('instituciones.importar.plantilla');
     Route::post('/instituciones/{institucion}/importar', [ImportarAlumnosController::class, 'procesar'])->name('instituciones.importar.procesar');
+
+    // Abonos
+    Route::get('/mi-abono', [AbonoController::class, 'mio'])->name('abonos.mio');
+    Route::post('/mi-abono', [AbonoController::class, 'pagarMio'])->middleware('throttle:10,1')->name('abonos.mio.pagar');
+    Route::get('/instituciones/{institucion}/abono', [AbonoController::class, 'institucion'])->name('abonos.institucion');
+    Route::get('/instituciones/{institucion}/abono/cotizar', [AbonoController::class, 'cotizar'])->name('abonos.institucion.cotizar');
+    Route::post('/instituciones/{institucion}/abono', [AbonoController::class, 'pagarInstitucion'])->middleware('throttle:10,1')->name('abonos.institucion.pagar');
+    Route::patch('/pagos/{pago}/cancelar', [AbonoController::class, 'cancelar'])->name('abonos.cancelar');
+    Route::get('/pagos/{pago}/comprobante', [AbonoController::class, 'comprobante'])->name('abonos.comprobante');
 
     // Archivos de tareas y entregas
     Route::get('/archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])->name('archivos.descargar');

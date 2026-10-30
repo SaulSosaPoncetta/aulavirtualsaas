@@ -181,6 +181,15 @@ class InstitucionController extends Controller
             return back()->with('exito', "Ya formabas parte de {$institucion->nombre}.");
         }
 
+        // Cada docente ocupa un lugar del abono de la institución
+        $abono = $institucion->abono;
+        if (! $abono || ! $abono->estaActivo()) {
+            return back()->with('error', "{$institucion->nombre} todavía no tiene el abono activo. Avisale al administrador.");
+        }
+        if (! $abono->hayCupo()) {
+            return back()->with('error', "{$institucion->nombre} completó su cupo de docentes. El administrador tiene que ampliarlo para que puedas sumarte.");
+        }
+
         $institucion->usuarios()->attach($user->id, ['rol' => 'docente', 'activo' => true]);
 
         return redirect()->route('instituciones.index')

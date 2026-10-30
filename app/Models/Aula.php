@@ -154,6 +154,16 @@ class Aula extends Model
         return $this->miembros()->where('users.id', $user->id)->wherePivot('estado', 'activo')->exists();
     }
 
+    /** ¿El abono que cubre el aula está al día? (institución o docente titular) */
+    public function escrituraHabilitada(): bool
+    {
+        if ($this->institucion_id) {
+            return (bool) $this->institucion?->abonoActivo();
+        }
+
+        return (bool) $this->titular?->abonoActivo();
+    }
+
     /** Titular, co-docente activo o superadmin. */
     public function puedeEditar(User $user): bool
     {
