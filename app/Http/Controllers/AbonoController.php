@@ -30,7 +30,8 @@ class AbonoController extends Controller
             'plan'          => $plan,
             'meses'         => $this->precios->opcionesMeses(),
             'transferencia' => config('abonos.transferencia'),
-            'pendiente'     => $abono->pagos->firstWhere('estado', 'pendiente'),
+            'pendiente'     => $abono->pagos->first(fn ($p) => $p->estado === 'pendiente' && $p->metodo !== 'mercadopago'),
+            'mpHabilitado'  => \App\Services\MercadoPagoService::habilitado(),
             'instituciones' => $user->institucionesDocente()->with('abono')->get()->unique('id')->values(),
         ]);
     }
@@ -71,7 +72,8 @@ class AbonoController extends Controller
             'escalas'       => $this->precios->escalasInstitucionales(),
             'meses'         => $this->precios->opcionesMeses(),
             'transferencia' => config('abonos.transferencia'),
-            'pendiente'     => $abono->pagos->firstWhere('estado', 'pendiente'),
+            'pendiente'     => $abono->pagos->first(fn ($p) => $p->estado === 'pendiente' && $p->metodo !== 'mercadopago'),
+            'mpHabilitado'  => \App\Services\MercadoPagoService::habilitado(),
         ]);
     }
 

@@ -106,9 +106,25 @@
                                 <div class="small text-muted" id="detallePrecio"></div>
                             </div>
 
+                            @if ($mpHabilitado)
+                                <button type="submit" class="btn btn-mp btn-lg w-100 mb-2" formaction="{{ route('mp.institucion', $institucion) }}" formnovalidate>
+                                    <i class="bi bi-credit-card-2-front me-1"></i> Pagar con Mercado Pago
+                                </button>
+                                <div class="small text-muted text-center mb-3">Tarjeta, dinero en cuenta o efectivo. Se acredita al instante.</div>
+
+                                <button class="btn btn-link w-100 mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#pagoManual">
+                                    Prefiero pagar por transferencia
+                                </button>
+                                <div class="collapse {{ $errors->any() ? 'show' : '' }}" id="pagoManual">
+                            @endif
+
                             @include('abonos._transferencia')
 
                             <button type="submit" class="btn btn-primary w-100"><i class="bi bi-send me-1"></i> Avisar que pagué</button>
+
+                            @if ($mpHabilitado)
+                                </div>
+                            @endif
                         </form>
                     </div>
                 </div>

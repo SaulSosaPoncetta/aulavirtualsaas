@@ -6,7 +6,10 @@
             <div class="d-flex align-items-center gap-2 py-2 border-bottom small">
                 <div class="flex-grow-1">
                     <div class="fw-semibold">{{ \App\Models\Plan::pesos($p->importe) }} <span class="fw-normal text-muted">· {{ $p->detalle }}</span></div>
-                    <div class="text-muted">{{ $p->created_at->format('d/m/Y') }} · {{ $p->metodo_label }}</div>
+                    <div class="text-muted">
+                        {{ $p->created_at->format('d/m/Y') }} · {{ $p->metodo_label }}
+                        @if ($p->metodo === 'mercadopago' && $p->mp_payment_id) · N° {{ $p->mp_payment_id }} @endif
+                    </div>
                 </div>
                 @if ($p->comprobante_path)
                     <a href="{{ route('abonos.comprobante', $p) }}" target="_blank" class="btn btn-sm btn-link" title="Ver comprobante"><i class="bi bi-paperclip"></i></a>

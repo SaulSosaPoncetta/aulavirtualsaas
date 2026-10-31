@@ -12,6 +12,7 @@ use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\IntentoController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LibretaController;
+use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\MuroController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RecursoController;
@@ -155,6 +156,11 @@ Route::middleware(['auth', RequiereCambioPassword::class, VerificarAbono::class]
     Route::post('/instituciones/{institucion}/abono', [AbonoController::class, 'pagarInstitucion'])->middleware('throttle:10,1')->name('abonos.institucion.pagar');
     Route::patch('/pagos/{pago}/cancelar', [AbonoController::class, 'cancelar'])->name('abonos.cancelar');
     Route::get('/pagos/{pago}/comprobante', [AbonoController::class, 'comprobante'])->name('abonos.comprobante');
+
+    // Mercado Pago
+    Route::post('/mi-abono/mercadopago', [MercadoPagoController::class, 'pagarMio'])->middleware('throttle:10,1')->name('mp.mio');
+    Route::post('/instituciones/{institucion}/abono/mercadopago', [MercadoPagoController::class, 'pagarInstitucion'])->middleware('throttle:10,1')->name('mp.institucion');
+    Route::get('/mercadopago/retorno', [MercadoPagoController::class, 'retorno'])->name('mp.retorno');
 
     // ===================== Administración (superadmin) =====================
     Route::middleware(SoloSuperadmin::class)->prefix('admin')->name('admin.')->group(function () {
