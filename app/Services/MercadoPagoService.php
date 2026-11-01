@@ -3,173 +3,169 @@
 namespace App\Services;
 
 use App\Models\Pago;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Request;
+use App\Models\Suscripcion;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 /**
- * Integración con Mercado Pago Checkout Pro usando la API REST (sin SDK).
+ * Integración directa con la API REST de Mercado Pago (sin SDK de terceros),
+ * para no depender de instalar paquetes vía Composer/Packagist.
+ *
+ * Docs: https://www.mercadopago.com.ar/developers/es/reference
  */
 class MercadoPagoService
 {
-    public static function habilitado(): bool
-    {
-        return filled(config('mercadopago.access_token'));
-    }
+    protected string $baseUrl = 'https://api.mercadopago.com';
 
-    protected function http(): PendingRequest
+    protected function http()
     {
-        return Http::baseUrl(config('mercadopago.api'))
-            ->withToken(config('mercadopago.access_token'))
+        return Http::withToken(config('mercadopago.access_token'))
             ->acceptJson()
-            ->timeout(config('mercadopago.timeout', 20));
+            ->asJson();
     }
 
     /**
-     * Crea la preferencia de pago y devuelve la URL a la que hay que mandar al cliente.
+     * Pago único (Preference / Checkout Pro). Sirve tanto para suscripciones
+     * "unico" como para el primer cobro manual de una recurrente.
      */
-    public function crearPreferencia(Pago $pago, string $titulo, ?string $email): string
+    public function crearPreferencia(Suscripcion $suscripcion): array
     {
-        $esHttps = Str::startsWith(config('app.url'), 'https://');
+        $clienteSistema = $suscripcion->clienteSistema;
+        $cliente = $clienteSistema->cliente;
+        $sistema = $clienteSistema->sistema;
 
+        $response = $this->http()->post("{$this->baseUrl}/checkout/preferences", [
+            'items' => [[
+                'title' => $this->titulo($suscripcion, $sistema->nombre),
+                'quantity' => 1,
+                'currency_id' => $suscripcion->moneda,
+                'unit_price' => (float) $suscripcion->monto,
+            ]],
+            'payer' => [
+                'name' => $cliente->nombre,
+                'email' => $cliente->email,
+            ],
+            'external_reference' => (string) $suscripcion->id_suscripcion,
+            'back_urls' => config('mercadopago.back_urls'),
+            'auto_return' => 'approved',
+            'notification_url' => config('mercadopago.notification_url'),
+        ]);
+
+        $response->throw();
+
+        return $response->json();
+    }
+
+    /**
+     * Suscripción recurrente (Preapproval). Requiere que el cliente autorice
+     * el débito automático desde el init_point que devuelve MP.
+     */
+    public function crearPreapproval(Suscripcion $suscripcion): array
+    {
+        $clienteSistema = $suscripcion->clienteSistema;
+        $cliente = $clienteSistema->cliente;
+        $sistema = $clienteSistema->sistema;
+
+        $response = $this->http()->post("{$this->baseUrl}/preapproval", [
+            'reason' => $this->titulo($suscripcion, $sistema->nombre),
+            'external_reference' => (string) $suscripcion->id_suscripcion,
+            'payer_email' => $cliente->email,
+            'auto_recurring' => [
+                'frequency' => max(1, (int) ($suscripcion->planCatalogo?->duracion_meses ?? 1)),
+                'frequency_type' => 'months',
+                'transaction_amount' => (float) $suscripcion->monto,
+                'currency_id' => $suscripcion->moneda,
+            ],
+            'back_url' => config('mercadopago.back_urls.success'),
+            'notification_url' => config('mercadopago.notification_url'),
+            'status' => 'pending',
+        ]);
+
+        $response->throw();
+
+        return $response->json();
+    }
+
+    protected function titulo(Suscripcion $suscripcion, string $sistema): string
+    {
+        $titulo = "{$sistema} - {$suscripcion->plan}";
+        $plan = $suscripcion->planCatalogo;
+
+        if ($plan && $plan->cobro_por_unidad && $suscripcion->cantidad > 1) {
+            $titulo .= " ({$suscripcion->cantidad} ".($plan->unidad_nombre ?: 'unidades').')';
+        }
+
+        return $titulo;
+    }
+
+    /**
+     * Pago único de un Pago concreto (el que ya tiene meses, cantidad y monto definidos).
+     * external_reference = "pago-{id}": el webhook lo reconoce y aplica exactamente ese pago.
+     */
+    public function crearPreferenciaPago(Pago $pago, string $titulo, ?string $email): array
+    {
         $datos = [
             'items' => [[
-                'id'          => 'abono-' . $pago->abono_id,
-                'title'       => $titulo,
-                'description' => $pago->detalle,
-                'quantity'    => 1,
-                'currency_id' => 'ARS',
-                'unit_price'  => round((float) $pago->importe, 2),
+                'title' => $titulo,
+                'quantity' => 1,
+                'currency_id' => $pago->moneda,
+                'unit_price' => round((float) $pago->monto, 2),
             ]],
-            'external_reference'   => 'pago-' . $pago->id,
-            'statement_descriptor' => mb_substr(config('mercadopago.statement'), 0, 13),
-            'back_urls'            => [
-                'success' => route('mp.retorno'),
-                'pending' => route('mp.retorno'),
-                'failure' => route('mp.retorno'),
-            ],
-            'expires' => true,
-            'expiration_date_to' => now('America/Argentina/Buenos_Aires')->addDays(3)->format('Y-m-d\TH:i:s.vP'),
+            'external_reference' => 'pago-'.$pago->id_pago,
+            'back_urls' => config('mercadopago.back_urls'),
+            'auto_return' => 'approved',
+            'notification_url' => config('mercadopago.notification_url'),
         ];
 
         if ($email) {
             $datos['payer'] = ['email' => $email];
         }
 
-        // Mercado Pago solo acepta auto_return y webhooks con URLs públicas https
-        if ($esHttps) {
-            $datos['auto_return']      = 'approved';
-            $datos['notification_url'] = route('mp.webhook');
-        }
+        $response = $this->http()->post("{$this->baseUrl}/checkout/preferences", $datos);
+        $response->throw();
 
-        $resp = $this->http()->post('/checkout/preferences', $datos);
+        return $response->json();
+    }
 
-        if (! $resp->successful()) {
-            Log::error('Mercado Pago: error al crear preferencia', ['pago' => $pago->id, 'status' => $resp->status(), 'body' => $resp->body()]);
-            throw new RuntimeException('No se pudo iniciar el pago con Mercado Pago (' . $resp->status() . ').');
-        }
+    public function obtenerPago(string $paymentId): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/v1/payments/{$paymentId}");
+        $response->throw();
 
-        $pago->update(['mp_preference_id' => $resp->json('id')]);
+        return $response->json();
+    }
 
-        // Con credenciales de prueba se usa el link de sandbox
-        $esPrueba = Str::startsWith(config('mercadopago.access_token'), 'TEST-');
+    public function obtenerPreapproval(string $preapprovalId): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/preapproval/{$preapprovalId}");
+        $response->throw();
 
-        return $esPrueba
-            ? ($resp->json('sandbox_init_point') ?? $resp->json('init_point'))
-            : $resp->json('init_point');
+        return $response->json();
     }
 
     /**
-     * Consulta un pago en Mercado Pago y actualiza el pago local.
-     * Si está aprobado y el importe coincide, activa el abono.
+     * Valida la firma "x-signature" que Mercado Pago envía en cada webhook.
+     * https://www.mercadopago.com.ar/developers/es/docs/checkout-api/webhooks#validar-el-origen-de-la-notificacion
      */
-    public function procesarPago(string $paymentId): ?Pago
+    public function validarFirmaWebhook(string $xSignature, string $xRequestId, string $dataId): bool
     {
-        $resp = $this->http()->get('/v1/payments/' . urlencode($paymentId));
+        $partes = collect(explode(',', $xSignature))
+            ->mapWithKeys(function ($parte) {
+                [$clave, $valor] = array_pad(explode('=', trim($parte), 2), 2, null);
 
-        if (! $resp->successful()) {
-            Log::warning('Mercado Pago: no se pudo consultar el pago', ['payment_id' => $paymentId, 'status' => $resp->status()]);
+                return [$clave => $valor];
+            });
 
-            return null;
-        }
+        $ts = $partes->get('ts');
+        $hashRecibido = $partes->get('v1');
 
-        $mp  = $resp->json();
-        $ref = (string) ($mp['external_reference'] ?? '');
-
-        if (! Str::startsWith($ref, 'pago-')) {
-            return null;
-        }
-
-        $pago = Pago::find((int) Str::after($ref, 'pago-'));
-        if (! $pago || $pago->metodo !== 'mercadopago') {
-            return null;
-        }
-
-        $estado = $mp['status'] ?? null;
-
-        $pago->update([
-            'mp_payment_id' => (string) $mp['id'],
-            'mp_status'     => $estado . (isset($mp['status_detail']) ? ' / ' . $mp['status_detail'] : ''),
-        ]);
-
-        if ($pago->estado === 'aprobado') {
-            return $pago; // ya estaba acreditado
-        }
-
-        if ($estado === 'approved') {
-            $cobrado = (float) ($mp['transaction_amount'] ?? 0);
-
-            if ($cobrado + 1 < (float) $pago->importe) {
-                Log::warning('Mercado Pago: importe menor al esperado', ['pago' => $pago->id, 'cobrado' => $cobrado, 'esperado' => $pago->importe]);
-                $pago->update(['observaciones' => trim($pago->observaciones . "\nImporte cobrado por MP ($cobrado) menor al esperado: revisar.")]);
-
-                return $pago;
-            }
-
-            // Se acredita aunque el aviso estuviera cancelado: el dinero entró
-            $pago->update(['estado' => 'pendiente']);
-            $pago->abono->aplicarPago($pago);
-
-            return $pago->fresh();
-        }
-
-        if (in_array($estado, ['rejected', 'cancelled', 'refunded', 'charged_back'], true) && $pago->estado === 'pendiente') {
-            $pago->update(['estado' => $estado === 'rejected' ? 'rechazado' : 'cancelado']);
-        }
-
-        return $pago;
-    }
-
-    /**
-     * Valida la firma del webhook (cabecera x-signature) con la clave secreta.
-     * Si no hay clave configurada, no valida (igual se consulta el pago a la API, que es la fuente de verdad).
-     */
-    public function firmaValida(Request $request): bool
-    {
-        $secreto = config('mercadopago.webhook_secret');
-        if (! $secreto) {
-            return true;
-        }
-
-        $firma     = (string) $request->header('x-signature');
-        $requestId = (string) $request->header('x-request-id');
-        $dataId    = (string) ($request->query('data_id') ?? $request->input('data.id'));
-
-        $partes = [];
-        foreach (explode(',', $firma) as $par) {
-            [$k, $v] = array_pad(explode('=', trim($par), 2), 2, null);
-            $partes[$k] = $v;
-        }
-
-        if (empty($partes['ts']) || empty($partes['v1'])) {
+        if (! $ts || ! $hashRecibido) {
             return false;
         }
 
-        $manifiesto = 'id:' . strtolower($dataId) . ';request-id:' . $requestId . ';ts:' . $partes['ts'] . ';';
+        $manifest = "id:{$dataId};request-id:{$xRequestId};ts:{$ts};";
+        $hashCalculado = hash_hmac('sha256', $manifest, config('mercadopago.webhook_secret'));
 
-        return hash_equals(hash_hmac('sha256', $manifiesto, $secreto), $partes['v1']);
+        return Str::of($hashCalculado)->lower()->exactly(Str::lower($hashRecibido));
     }
 }
