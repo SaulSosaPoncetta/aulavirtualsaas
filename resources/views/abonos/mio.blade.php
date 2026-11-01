@@ -4,6 +4,7 @@
 
 @section('contenido')
     @php($pesos = fn ($v) => \App\Models\Plan::pesos($v))
+    @php($panelPagos = \App\Services\PanelPagos::habilitado())
 
     <div class="page-header">
         <h1><i class="bi bi-credit-card text-primary me-2"></i>Mi abono</h1>
@@ -28,7 +29,7 @@
                             @endif
                         </div>
                     </div>
-                    @if ($plan)
+                    @if ($plan && ! $panelPagos)
                         <div class="text-end">
                             <div class="h3 fw-bold mb-0">{{ $pesos($plan->precio) }}</div>
                             <div class="small text-muted">por mes</div>
@@ -38,6 +39,21 @@
             </div>
 
             {{-- Pagar --}}
+            @if ($panelPagos)
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h2 class="h6 fw-bold mb-2">{{ $abono->estaActivo() ? 'Renovar / adelantar meses' : 'Activar mi abono' }}</h2>
+                        <p class="text-muted small mb-3">
+                            Vas a pagar en el sitio de MiGestión: Mercado Pago (tarjeta, dinero en cuenta, efectivo o débito automático) o transferencia.
+                            Cuando se acredita, el abono se actualiza solo.
+                        </p>
+                        <a href="{{ route('abonos.mio.panel') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-credit-card-2-front me-1"></i> {{ $abono->estaActivo() ? 'Renovar mi abono' : 'Pagar mi abono' }}
+                        </a>
+                        <div class="small text-muted text-center mt-2">Los precios y el total se muestran en la página de pago.</div>
+                    </div>
+                </div>
+            @else
             @if (! $plan)
                 <div class="alert alert-warning">Todavía no hay un precio cargado para el abono. Escribinos a {{ config('abonos.contacto') }}.</div>
             @elseif ($pendiente)
@@ -95,6 +111,7 @@
                         </form>
                     </div>
                 </div>
+            @endif
             @endif
         </div>
 

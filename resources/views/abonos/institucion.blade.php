@@ -4,6 +4,7 @@
 
 @section('contenido')
     @php($pesos = fn ($v) => \App\Models\Plan::pesos($v))
+    @php($panelPagos = \App\Services\PanelPagos::habilitado())
 
     <div class="page-header">
         <div>
@@ -37,6 +38,7 @@
                 @endif
             </div></div>
         </div>
+        @if (! $panelPagos)
         <div class="col-md-4">
             <div class="card h-100"><div class="card-body py-3">
                 <div class="small text-muted mb-1">Precio por docente por mes</div>
@@ -44,11 +46,32 @@
                     <div class="small d-flex justify-content-between"><span>{{ $e->rango_texto }}</span><strong>{{ $pesos($e->precio) }}</strong></div>
                 @endforeach
             </div></div>
+        @endif
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-7">
+            @if ($panelPagos)
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h2 class="h6 fw-bold mb-2">{{ $abono->estaActivo() ? 'Renovar o ampliar el abono' : 'Contratar abono' }}</h2>
+                        <p class="text-muted small mb-3">
+                            Elegís la cantidad de docentes{{ $abono->estaActivo() ? ', renovás o ampliás el cupo' : ' y los meses' }} en el sitio de MiGestión,
+                            y pagás con Mercado Pago (tarjeta, dinero en cuenta, efectivo o débito automático) o por transferencia.
+                            Cuando se acredita, el abono se actualiza solo.
+                        </p>
+                        <ul class="small text-muted">
+                            <li>Hoy hay <strong>{{ $usados }}</strong> docentes en la institución: el cupo no puede ser menor.</li>
+                            @if ($abono->cupo_docentes)<li>Cupo contratado: <strong>{{ (int) $abono->cupo_docentes }}</strong> docentes.</li>@endif
+                        </ul>
+                        <a href="{{ route('abonos.institucion.panel', $institucion) }}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-credit-card-2-front me-1"></i> {{ $abono->estaActivo() ? 'Renovar o ampliar' : 'Contratar abono' }}
+                        </a>
+                        <div class="small text-muted text-center mt-2">Los precios y el total se muestran en la página de pago.</div>
+                    </div>
+                </div>
+            @else
             @if ($escalas->isEmpty())
                 <div class="alert alert-warning">Todavía no hay precios cargados para abonos institucionales. Escribinos a {{ config('abonos.contacto') }}.</div>
             @elseif ($pendiente)
@@ -128,6 +151,7 @@
                         </form>
                     </div>
                 </div>
+            @endif
             @endif
         </div>
 

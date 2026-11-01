@@ -10,13 +10,14 @@ class Abono extends Model
 {
     protected $table = 'abonos';
 
-    protected $fillable = ['user_id', 'institucion_id', 'tipo', 'cupo_docentes', 'vence_el'];
+    protected $fillable = ['user_id', 'institucion_id', 'tipo', 'cupo_docentes', 'vence_el', 'panel_estado', 'panel_plan', 'panel_sync_at'];
 
     protected function casts(): array
     {
         return [
             'vence_el'      => 'date',
             'cupo_docentes' => 'integer',
+            'panel_sync_at' => 'datetime',
         ];
     }
 
@@ -155,6 +156,50 @@ class Abono extends Model
                 'aprobado_at'    => Carbon::now('America/Argentina/Buenos_Aires'),
                 'registrado_por' => $aprobadoPor,
             ]);
+        });
+    }
+
+    // ===================== Aviso del Panel de Gestión =====================
+
+    /**
+     * Aplica el abono que informa el Panel (fuente de verdad de pagos y vencimientos).
+     * El sistema conserva su copia local de vencimiento y cupo, así sigue funcionando
+     * aunque el Panel no responda.
+     *
+     * @param array $d  payload del Panel: estado, plan, cantidad, fecha_vencimiento (Y-m-d|null), enviado_en
+     */
+    public function aplicarDesdePanel(array $d): void
+    {
+        $estado = (string) ($d['estado'] ?? '');
+
+        DB::transaction(function () use ($d, $estado) {
+            $this->panel_estado = $estado;
+            $this->panel_plan   = $d['plan'] ?? $this->panel_plan;
+            $this->panel_sync_at = ! empty($d['enviado_en']) ? Carbon::parse($d['enviado_en']) : Carbon::now();
+
+            // "pendiente": todavía no pagó, no se toca vencimiento ni cupo.
+            if ($estado !== 'pendiente') {
+                $fecha = ! empty($d['fecha_vencimiento'])
+                    ? Carbon::parse($d['fecha_vencimiento'], 'America/Argentina/Buenos_Aires')->startOfDay()
+                    : null;
+
+                if ($estado === 'activa') {
+                    // Sin fecha = sin vencimiento. Los días de gracia del Panel se respetan.
+                    $this->vence_el = $fecha
+                        ? $fecha->addDays((int) config('panel.gracia_dias'))
+                        : Carbon::create(2099, 12, 31);
+                } else {
+                    // vencida / suspendida / cancelada: el acceso queda cortado desde ayer como mucho.
+                    $ayer = static::hoy()->subDay();
+                    $this->vence_el = ($fecha && $fecha->lt($ayer)) ? $fecha : $ayer;
+                }
+
+                if ($this->tipo === 'institucional' && isset($d['cantidad'])) {
+                    $this->cupo_docentes = max(0, (int) $d['cantidad']);
+                }
+            }
+
+            $this->save();
         });
     }
 }

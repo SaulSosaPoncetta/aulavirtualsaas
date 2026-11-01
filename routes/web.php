@@ -14,6 +14,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LibretaController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\MuroController;
+use App\Http\Controllers\PagarEnPanelController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\TareaController;
@@ -156,6 +157,10 @@ Route::middleware(['auth', RequiereCambioPassword::class, VerificarAbono::class]
     Route::post('/instituciones/{institucion}/abono', [AbonoController::class, 'pagarInstitucion'])->middleware('throttle:10,1')->name('abonos.institucion.pagar');
     Route::patch('/pagos/{pago}/cancelar', [AbonoController::class, 'cancelar'])->name('abonos.cancelar');
     Route::get('/pagos/{pago}/comprobante', [AbonoController::class, 'comprobante'])->name('abonos.comprobante');
+
+    // Pagar en el Panel de Gestión (enlace firmado)
+    Route::get('/mi-abono/pagar', [PagarEnPanelController::class, 'mio'])->middleware('throttle:20,1')->name('abonos.mio.panel');
+    Route::get('/instituciones/{institucion}/abono/pagar', [PagarEnPanelController::class, 'institucion'])->middleware('throttle:20,1')->name('abonos.institucion.panel');
 
     // Mercado Pago
     Route::post('/mi-abono/mercadopago', [MercadoPagoController::class, 'pagarMio'])->middleware('throttle:10,1')->name('mp.mio');
