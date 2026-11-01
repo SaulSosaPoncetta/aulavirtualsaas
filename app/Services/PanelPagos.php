@@ -18,7 +18,7 @@ class PanelPagos
 {
     public static function habilitado(): bool
     {
-        return (bool) config('panel.activo') && filled(config('panel.secret'));
+        return filled(config('panel.secret')) && filled(config('panel.url'));
     }
 
     public static function referencia(Abono $abono): string

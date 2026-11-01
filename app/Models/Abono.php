@@ -33,11 +33,6 @@ class Abono extends Model
         return $this->belongsTo(Institucion::class);
     }
 
-    public function pagos()
-    {
-        return $this->hasMany(Pago::class)->orderByDesc('created_at');
-    }
-
     // ===================== Obtener / crear =====================
 
     public static function deUsuario(User $user): self
@@ -128,35 +123,6 @@ class Abono extends Model
         $dias = $this->diasRestantes();
 
         return $dias === null || $dias <= 0 ? 1 : max(1, (int) ceil(($dias + 1) / 30));
-    }
-
-    // ===================== Aplicar un pago aprobado =====================
-
-    public function aplicarPago(Pago $pago, ?int $aprobadoPor = null): void
-    {
-        DB::transaction(function () use ($pago, $aprobadoPor) {
-            $pago->refresh();
-            if ($pago->estado === 'aprobado') {
-                return; // ya aplicado (evita duplicar con el webhook)
-            }
-
-            if ($pago->concepto === 'renovacion') {
-                $base = $this->estaActivo() ? $this->vence_el->copy() : static::hoy()->subDay();
-                $this->vence_el = $base->addMonthsNoOverflow($pago->meses);
-            }
-
-            if ($this->tipo === 'institucional' && $pago->cupo_docentes) {
-                $this->cupo_docentes = $pago->cupo_docentes;
-            }
-
-            $this->save();
-
-            $pago->update([
-                'estado'         => 'aprobado',
-                'aprobado_at'    => Carbon::now('America/Argentina/Buenos_Aires'),
-                'registrado_por' => $aprobadoPor,
-            ]);
-        });
     }
 
     // ===================== Aviso del Panel de Gestión =====================

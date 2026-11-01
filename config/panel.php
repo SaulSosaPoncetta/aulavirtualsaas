@@ -14,9 +14,6 @@
 
 return [
 
-    // false = se siguen usando los formularios de pago locales (modo anterior)
-    'activo' => (bool) env('PANEL_PAGOS_ACTIVO', false),
-
     'url'    => rtrim((string) env('PANEL_URL', 'https://panelgestion.migestion.com.ar'), '/'),
     'slug'   => env('PANEL_SLUG', 'aulavirtual'),
     'secret' => env('PANEL_WEBHOOK_SECRET'),

@@ -12,7 +12,6 @@ use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\IntentoController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LibretaController;
-use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\MuroController;
 use App\Http\Controllers\PagarEnPanelController;
 use App\Http\Controllers\PreguntaController;
@@ -151,39 +150,18 @@ Route::middleware(['auth', RequiereCambioPassword::class, VerificarAbono::class]
 
     // Abonos
     Route::get('/mi-abono', [AbonoController::class, 'mio'])->name('abonos.mio');
-    Route::post('/mi-abono', [AbonoController::class, 'pagarMio'])->middleware('throttle:10,1')->name('abonos.mio.pagar');
     Route::get('/instituciones/{institucion}/abono', [AbonoController::class, 'institucion'])->name('abonos.institucion');
-    Route::get('/instituciones/{institucion}/abono/cotizar', [AbonoController::class, 'cotizar'])->name('abonos.institucion.cotizar');
-    Route::post('/instituciones/{institucion}/abono', [AbonoController::class, 'pagarInstitucion'])->middleware('throttle:10,1')->name('abonos.institucion.pagar');
-    Route::patch('/pagos/{pago}/cancelar', [AbonoController::class, 'cancelar'])->name('abonos.cancelar');
-    Route::get('/pagos/{pago}/comprobante', [AbonoController::class, 'comprobante'])->name('abonos.comprobante');
 
     // Pagar en el Panel de Gestión (enlace firmado)
     Route::get('/mi-abono/pagar', [PagarEnPanelController::class, 'mio'])->middleware('throttle:20,1')->name('abonos.mio.panel');
     Route::get('/instituciones/{institucion}/abono/pagar', [PagarEnPanelController::class, 'institucion'])->middleware('throttle:20,1')->name('abonos.institucion.panel');
 
-    // Mercado Pago
-    Route::post('/mi-abono/mercadopago', [MercadoPagoController::class, 'pagarMio'])->middleware('throttle:10,1')->name('mp.mio');
-    Route::post('/instituciones/{institucion}/abono/mercadopago', [MercadoPagoController::class, 'pagarInstitucion'])->middleware('throttle:10,1')->name('mp.institucion');
-    Route::get('/mercadopago/retorno', [MercadoPagoController::class, 'retorno'])->name('mp.retorno');
-
     // ===================== Administración (superadmin) =====================
     Route::middleware(SoloSuperadmin::class)->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [Admin\PanelController::class, 'index'])->name('panel');
 
-        Route::get('/pagos', [Admin\PagoController::class, 'index'])->name('pagos.index');
-        Route::get('/pagos/registrar', [Admin\PagoController::class, 'crear'])->name('pagos.crear');
-        Route::post('/pagos', [Admin\PagoController::class, 'guardar'])->name('pagos.guardar');
-        Route::patch('/pagos/{pago}/aprobar', [Admin\PagoController::class, 'aprobar'])->name('pagos.aprobar');
-        Route::patch('/pagos/{pago}/rechazar', [Admin\PagoController::class, 'rechazar'])->name('pagos.rechazar');
-
         Route::get('/abonos', [Admin\SuscripcionController::class, 'index'])->name('abonos.index');
         Route::patch('/abonos/{abono}', [Admin\SuscripcionController::class, 'ajustar'])->name('abonos.ajustar');
-
-        Route::get('/precios', [Admin\PlanController::class, 'index'])->name('planes.index');
-        Route::post('/precios', [Admin\PlanController::class, 'store'])->name('planes.store');
-        Route::put('/precios/{plan}', [Admin\PlanController::class, 'update'])->name('planes.update');
-        Route::delete('/precios/{plan}', [Admin\PlanController::class, 'destroy'])->name('planes.destroy');
 
         Route::get('/usuarios', [Admin\UsuarioController::class, 'index'])->name('usuarios.index');
         Route::patch('/usuarios/{user}/activo', [Admin\UsuarioController::class, 'alternarActivo'])->name('usuarios.activo');

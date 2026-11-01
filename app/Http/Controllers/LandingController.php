@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\AbonoService;
+use App\Services\PanelPlanes;
 use Illuminate\Http\Request;
 
 class LandingController extends Controller
 {
-    public function index(Request $request, AbonoService $precios)
+    public function index(Request $request, PanelPlanes $precios)
     {
         // Si ya está logueado, va directo a sus aulas
         if ($request->user()) {

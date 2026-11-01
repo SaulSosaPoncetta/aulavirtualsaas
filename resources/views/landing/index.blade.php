@@ -11,7 +11,7 @@
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body class="landing">
-@php($pesos = fn ($v) => \App\Models\Plan::pesos($v))
+@php($pesos = fn ($v) => '$ ' . number_format((float) $v, 0, ',', '.'))
 
 {{-- ===================== Barra superior ===================== --}}
 <nav class="navbar navbar-expand-lg landing-nav sticky-top">

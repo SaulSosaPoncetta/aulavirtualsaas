@@ -3,19 +3,16 @@
 @section('titulo', 'Administración')
 
 @section('contenido')
-    @php($pesos = fn ($v) => \App\Models\Plan::pesos($v))
-
     <div class="page-header">
         <h1><i class="bi bi-shield-lock text-primary me-2"></i>Administración</h1>
-        <a href="{{ route('admin.pagos.crear') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Registrar pago</a>
+        <a href="{{ config('panel.url') }}" target="_blank" rel="noopener" class="btn btn-primary"><i class="bi bi-box-arrow-up-right me-1"></i> Cobros en el Panel</a>
     </div>
 
     @include('admin._nav')
 
     <div class="row g-3 mb-4">
         @foreach ([
-            ['Ingresos del mes', $pesos($stats['ingresos_mes']), 'bi-cash-coin', 'success'],
-            ['Pagos por revisar', $stats['pendientes'], 'bi-hourglass-split', $stats['pendientes'] ? 'danger' : 'secondary'],
+            ['Abonos vencidos', $stats['vencidos'], 'bi-exclamation-triangle', $stats['vencidos'] ? 'danger' : 'secondary'],
             ['Docentes con abono', $stats['activos_uni'], 'bi-person-workspace', 'primary'],
             ['Instituciones con abono', $stats['activos_inst'] . ' · ' . $stats['cupos'] . ' cupos', 'bi-building', 'primary'],
             ['Docentes registrados', $stats['docentes'], 'bi-people', 'secondary'],
@@ -41,39 +38,14 @@
         <div class="col-lg-6">
             <div class="card h-100">
                 <div class="card-body">
-                    <h2 class="h6 fw-bold mb-3">Ingresos de los últimos 6 meses</h2>
-                    @php($max = max(1, $ingresos->max('total')))
-                    @foreach ($ingresos as $i)
-                        <div class="d-flex align-items-center gap-2 mb-2 small">
-                            <span style="width: 70px">{{ $i['mes'] }}</span>
-                            <div class="flex-grow-1 bg-light rounded" style="height: 18px">
-                                <div class="bg-success rounded" style="height: 18px; width: {{ round($i['total'] / $max * 100) }}%"></div>
-                            </div>
-                            <span class="text-end fw-semibold" style="width: 100px">{{ $pesos($i['total']) }}</span>
-                        </div>
-                    @endforeach
+                    <h2 class="h6 fw-bold mb-3"><i class="bi bi-wallet2 me-1 text-primary"></i>Cobros</h2>
+                    <p class="small text-muted">Los precios, los pagos (Mercado Pago y transferencias), las aprobaciones y los avisos de vencimiento se gestionan en el Panel de MiGestión. Acá solo se ve el estado de cada abono.</p>
+                    <a href="{{ config('panel.url') }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">Abrir el Panel de cobros</a>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2 class="h6 fw-bold mb-3"><i class="bi bi-hourglass-split me-1 text-danger"></i>Pagos por revisar</h2>
-                    @forelse ($ultimosPagos as $p)
-                        <div class="d-flex justify-content-between small py-1 border-bottom">
-                            <span>{{ $p->abono->nombre }} · {{ $p->detalle }}</span>
-                            <strong>{{ $pesos($p->importe) }}</strong>
-                        </div>
-                    @empty
-                        <p class="small text-muted mb-0">No hay pagos pendientes.</p>
-                    @endforelse
-                    @if ($ultimosPagos->isNotEmpty())
-                        <a href="{{ route('admin.pagos.index') }}" class="btn btn-sm btn-outline-primary mt-3">Revisar pagos</a>
-                    @endif
-                </div>
-            </div>
-
             <div class="card">
                 <div class="card-body">
                     <h2 class="h6 fw-bold mb-3"><i class="bi bi-alarm me-1 text-warning"></i>Vencen en los próximos 10 días</h2>
