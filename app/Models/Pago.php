@@ -2,86 +2,85 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Pago extends Model
 {
-    use HasFactory;
-
     protected $table = 'pagos';
-    protected $primaryKey = 'id_pago';
+
+    public const METODOS = [
+        'mercadopago'   => 'Mercado Pago',
+        'transferencia' => 'Transferencia',
+        'efectivo'      => 'Efectivo',
+        'otro'          => 'Otro',
+    ];
+
+    public const ESTADOS = [
+        'pendiente' => ['Pendiente', 'warning'],
+        'aprobado'  => ['Aprobado', 'success'],
+        'rechazado' => ['Rechazado', 'danger'],
+        'cancelado' => ['Cancelado', 'secondary'],
+    ];
 
     protected $fillable = [
-        'id_suscripcion', 'id_plan', 'medio_pago', 'concepto', 'meses', 'cantidad',
-        'mp_payment_id', 'mp_preference_id',
-        'monto', 'moneda', 'estado', 'fecha_pago', 'payload_raw',
-        'comprobante_path', 'comprobante_nombre', 'fecha_transferencia', 'nota_cliente',
-        'comprobante_subido_at', 'revisado_por', 'revisado_at', 'motivo_rechazo',
+        'abono_id', 'concepto', 'metodo', 'estado', 'meses', 'cupo_docentes', 'importe',
+        'comprobante_path', 'observaciones', 'mp_preference_id', 'mp_payment_id', 'mp_status',
+        'aprobado_at', 'creado_por', 'registrado_por',
     ];
 
-    protected $casts = [
-        'fecha_pago' => 'datetime',
-        'monto' => 'decimal:2',
-        'payload_raw' => 'array',
-        'fecha_transferencia' => 'date',
-        'comprobante_subido_at' => 'datetime',
-        'revisado_at' => 'datetime',
-    ];
-
-    public function suscripcion(): BelongsTo
+    protected function casts(): array
     {
-        return $this->belongsTo(Suscripcion::class, 'id_suscripcion', 'id_suscripcion');
+        return [
+            'importe'       => 'decimal:2',
+            'meses'         => 'integer',
+            'cupo_docentes' => 'integer',
+            'aprobado_at'   => 'datetime',
+        ];
     }
 
-    public function plan(): BelongsTo
+    protected static function booted(): void
     {
-        return $this->belongsTo(Plan::class, 'id_plan', 'id_plan');
+        static::deleting(function (Pago $p) {
+            if ($p->comprobante_path) {
+                Storage::disk('local')->delete($p->comprobante_path);
+            }
+        });
     }
 
-    public function revisor(): BelongsTo
+    public function abono()
     {
-        return $this->belongsTo(User::class, 'revisado_por');
+        return $this->belongsTo(Abono::class);
     }
 
-    public function esTransferencia(): bool
+    public function creador()
     {
-        return $this->medio_pago === 'transferencia';
+        return $this->belongsTo(User::class, 'creado_por');
     }
 
-    /** Código que el cliente pone en el concepto de la transferencia. */
-    public function codigoReferencia(): string
+    public function getMetodoLabelAttribute(): string
     {
-        return 'MG-'.str_pad((string) $this->id_pago, 6, '0', STR_PAD_LEFT);
+        return self::METODOS[$this->metodo] ?? $this->metodo;
     }
 
-    public function esImagenComprobante(): bool
+    public function getEstadoLabelAttribute(): string
     {
-        return (bool) preg_match('/\.(jpe?g|png)$/i', (string) $this->comprobante_path);
+        return self::ESTADOS[$this->estado][0] ?? $this->estado;
     }
 
-    /** Qué se está pagando, en palabras: "Institución · 6 meses · 12 docentes" / "Ampliación a 15 docentes". */
-    public function detalleTexto(): string
+    public function getEstadoColorAttribute(): string
     {
-        $plan = $this->plan ?? $this->suscripcion?->planCatalogo;
-        $unidad = $plan?->unidad_nombre ?: 'unidades';
-        $nombre = $plan?->nombre ?? $this->suscripcion?->plan ?? 'Abono';
+        return self::ESTADOS[$this->estado][1] ?? 'secondary';
+    }
 
+    public function getDetalleAttribute(): string
+    {
         if ($this->concepto === 'ampliacion') {
-            return "{$nombre} · ampliación a {$this->cantidad} {$unidad}";
+            return "Ampliación a {$this->cupo_docentes} docentes";
         }
 
-        $partes = [$nombre];
+        $txt = $this->meses . ' ' . ($this->meses === 1 ? 'mes' : 'meses');
 
-        if ($this->meses) {
-            $partes[] = $this->meses.' '.($this->meses == 1 ? 'mes' : 'meses');
-        }
-
-        if ($plan?->cobro_por_unidad && $this->cantidad) {
-            $partes[] = "{$this->cantidad} {$unidad}";
-        }
-
-        return implode(' · ', $partes);
+        return $this->cupo_docentes ? "{$txt} · {$this->cupo_docentes} docentes" : $txt;
     }
 }
