@@ -18,6 +18,16 @@
                     </a>
                 </li>
                 @auth
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('agenda.pendientes') ? 'active' : '' }}" href="{{ route('agenda.pendientes') }}">
+                            <i class="bi bi-list-check me-1"></i> Pendientes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('agenda.calendario') ? 'active' : '' }}" href="{{ route('agenda.calendario') }}">
+                            <i class="bi bi-calendar3 me-1"></i> Calendario
+                        </a>
+                    </li>
                     @if (auth()->user()->esSuperadmin())
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.panel') }}">

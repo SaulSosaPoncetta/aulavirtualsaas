@@ -595,3 +595,75 @@ main {
 @media (max-width: 575.98px) {
     .campanita-menu { width: 92vw; }
 }
+
+// Agenda y calendario
+.punto-aula {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.calendario {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendario-cabecera {
+    padding: .5rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: .85rem;
+    background-color: $gray-100;
+    border-bottom: 1px solid $gray-200;
+}
+
+.calendario-dia {
+    min-height: 120px;
+    padding: .35rem;
+    border-right: 1px solid $gray-200;
+    border-bottom: 1px solid $gray-200;
+    overflow: hidden;
+
+    &:nth-child(7n) { border-right: 0; }
+
+    &.otro-mes {
+        background-color: $gray-100;
+        .calendario-numero { color: $gray-500; }
+    }
+
+    &.hoy .calendario-numero {
+        background-color: $teal-oscuro;
+        color: #fff;
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+.calendario-numero {
+    font-size: .85rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.calendario-evento {
+    display: block;
+    font-size: .75rem;
+    padding: .15rem .35rem;
+    margin-bottom: .2rem;
+    border-left: 3px solid $teal-oscuro;
+    background-color: $fondo;
+    border-radius: 3px;
+    color: $pizarra;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover { background-color: rgba($teal-claro, .15); }
+    &.hecho { opacity: .5; text-decoration: line-through; }
+}

@@ -18,6 +18,21 @@
         </div>
     </div>
 
+    @if (array_sum($resumen))
+        <a href="{{ route('agenda.pendientes') }}" class="card mb-4 text-decoration-none text-reset border-primary-subtle resumen-pendientes">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                <i class="bi bi-list-check fs-3 text-primary"></i>
+                <div class="flex-grow-1 d-flex flex-wrap gap-3">
+                    @if ($resumen['entregar'])<span><strong>{{ $resumen['entregar'] }}</strong> {{ $resumen['entregar'] === 1 ? 'tarea' : 'tareas' }} por entregar</span>@endif
+                    @if ($resumen['rehacer'])<span class="text-warning-emphasis"><strong>{{ $resumen['rehacer'] }}</strong> para rehacer</span>@endif
+                    @if ($resumen['rendir'])<span><strong>{{ $resumen['rendir'] }}</strong> {{ $resumen['rendir'] === 1 ? 'evaluación' : 'evaluaciones' }} por rendir</span>@endif
+                    @if ($resumen['corregir'])<span><strong>{{ $resumen['corregir'] }}</strong> por corregir</span>@endif
+                </div>
+                <span class="small text-primary fw-semibold">Ver pendientes <i class="bi bi-chevron-right"></i></span>
+            </div>
+        </a>
+    @endif
+
     <ul class="nav nav-pills mb-4">
         <li class="nav-item">
             <a class="nav-link {{ $estado === 'activa' ? 'active' : '' }}" href="{{ route('inicio') }}">Activas</a>

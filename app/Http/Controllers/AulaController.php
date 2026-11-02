@@ -36,7 +36,24 @@ class AulaController extends Controller
             ->where('estado', 'activo')
             ->pluck('rol', 'aula_id');
 
-        return view('aulas.index', compact('aulas', 'roles', 'estado'));
+        // Resumen de pendientes (cartel arriba de las aulas)
+        $agenda  = app(\App\Services\AgendaService::class);
+        $resumen = ['entregar' => 0, 'rendir' => 0, 'rehacer' => 0, 'corregir' => 0];
+
+        if ($estado === 'activa') {
+            if ($roles->contains('alumno')) {
+                $pa = $agenda->pendientesAlumno($user);
+                $resumen['entregar'] = $pa['porEntregar']->count();
+                $resumen['rendir']   = $pa['porRendir']->count();
+                $resumen['rehacer']  = $pa['paraRehacer']->count();
+            }
+            if ($roles->contains('docente')) {
+                $pd = $agenda->pendientesDocente($user);
+                $resumen['corregir'] = $pd['entregasPorCorregir']->sum('cantidad') + $pd['intentosPorCorregir']->sum('cantidad');
+            }
+        }
+
+        return view('aulas.index', compact('aulas', 'roles', 'estado', 'resumen'));
     }
 
     // ===================== Alta =====================

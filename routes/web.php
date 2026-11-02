@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbonoController;
+use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
@@ -58,6 +59,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificado::class, VerificarAbono::class])->group(function () {
     Route::get('/verificar-email', [VerificacionEmailController::class, 'aviso'])->name('verification.notice');
     Route::post('/verificar-email/reenviar', [VerificacionEmailController::class, 'reenviar'])->middleware('throttle:3,1')->name('verification.send');
+
+    // Agenda
+    Route::get('/pendientes', [AgendaController::class, 'pendientes'])->name('agenda.pendientes');
+    Route::get('/calendario', [AgendaController::class, 'calendario'])->name('agenda.calendario');
 
     // Notificaciones
     Route::get('/notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
