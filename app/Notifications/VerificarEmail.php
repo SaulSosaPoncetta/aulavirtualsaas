@@ -2,13 +2,22 @@
 
 namespace App\Notifications;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
 
-class VerificarEmail extends Notification
+/** Se envía en cola: la página responde al instante y el mail sale por detrás. */
+class VerificarEmail extends Notification implements ShouldQueue
 {
+    use Queueable;
+
+    public $tries = 3;
+
+    public $backoff = 60;
+
     public const MINUTOS = 1440; // 24 horas
 
     public function via(object $notifiable): array

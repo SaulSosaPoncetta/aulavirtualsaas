@@ -2,11 +2,20 @@
 
 namespace App\Notifications;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RestablecerPassword extends Notification
+/** Se envía en cola: la página responde al instante y el mail sale por detrás. */
+class RestablecerPassword extends Notification implements ShouldQueue
 {
+    use Queueable;
+
+    public $tries = 3;
+
+    public $backoff = 60;
+
     public function __construct(public string $token)
     {
     }

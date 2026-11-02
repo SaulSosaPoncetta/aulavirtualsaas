@@ -248,6 +248,15 @@ Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificad
         Route::get('/usuarios', [Admin\UsuarioController::class, 'index'])->name('usuarios.index');
         Route::patch('/usuarios/{user}/activo', [Admin\UsuarioController::class, 'alternarActivo'])->name('usuarios.activo');
         Route::patch('/usuarios/{user}/password', [Admin\UsuarioController::class, 'restablecerPassword'])->name('usuarios.password');
+
+        // Sistema: correo, cola y respaldos
+        Route::get('/sistema', [Admin\SistemaController::class, 'index'])->name('sistema.index');
+        Route::post('/sistema/correo', [Admin\SistemaController::class, 'probarCorreo'])->middleware('throttle:10,1')->name('sistema.correo');
+        Route::post('/sistema/cola/reintentar', [Admin\SistemaController::class, 'reintentarFallidos'])->name('sistema.reintentar');
+        Route::delete('/sistema/cola/fallidos', [Admin\SistemaController::class, 'borrarFallidos'])->name('sistema.fallidos');
+        Route::post('/sistema/respaldos', [Admin\SistemaController::class, 'crearRespaldo'])->middleware('throttle:5,1')->name('sistema.respaldo');
+        Route::get('/sistema/respaldos/{nombre}', [Admin\SistemaController::class, 'descargarRespaldo'])->where('nombre', '[A-Za-z0-9_\-\.]+')->name('sistema.respaldo.descargar');
+        Route::delete('/sistema/respaldos/{nombre}', [Admin\SistemaController::class, 'borrarRespaldo'])->where('nombre', '[A-Za-z0-9_\-\.]+')->name('sistema.respaldo.borrar');
     });
 
     // Archivos de tareas y entregas
