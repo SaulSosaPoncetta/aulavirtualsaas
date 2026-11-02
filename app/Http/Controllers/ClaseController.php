@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Aula;
 use App\Models\Clase;
 use App\Models\Recurso;
+use App\Services\HtmlSeguro;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -116,7 +117,7 @@ class ClaseController extends Controller
         $datos = $request->validate([
             'titulo'            => 'required|string|max:200',
             'unidad_id'         => 'nullable|integer|exists:unidades,id,aula_id,' . $aula->id,
-            'contenido'         => 'nullable|string|max:60000',
+            'contenido'         => 'nullable|string|max:200000',
             'fecha_publicacion' => 'nullable|date',
             'archivos'          => 'nullable|array|max:10',
             'archivos.*'        => 'file|mimes:' . self::EXTENSIONES . '|max:' . self::MAX_KB,
@@ -137,7 +138,7 @@ class ClaseController extends Controller
         return [
             'titulo'            => $datos['titulo'],
             'unidad_id'         => $datos['unidad_id'] ?? null,
-            'contenido'         => $datos['contenido'] ?? null,
+            'contenido'         => HtmlSeguro::limpiar($datos['contenido'] ?? null),
             'fecha_publicacion' => ! empty($datos['fecha_publicacion'])
                 ? Carbon::parse($datos['fecha_publicacion'], 'America/Argentina/Buenos_Aires')
                 : null,

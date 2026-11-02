@@ -50,13 +50,13 @@
             @endif
         </div>
 
-        <div class="contenido-muro">@include('partials._texto', ['texto' => $pub->texto])</div>
+        <div class="contenido-muro">@include('partials._contenido', ['texto' => $pub->texto])</div>
 
         @if ($soyAutor)
             <div class="collapse mt-3" id="editar{{ $pub->id }}">
                 <form method="POST" action="{{ route('muro.update', $pub) }}">
                     @csrf @method('PUT')
-                    <textarea class="form-control mb-2" name="texto" rows="3" maxlength="5000" required>{{ $pub->texto }}</textarea>
+                    <textarea class="form-control mb-2" name="texto" data-editor="simple">{{ \App\Services\HtmlSeguro::paraEditor($pub->texto) }}</textarea>
                     <div class="text-end">
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#editar{{ $pub->id }}">Cancelar</button>
                         <button type="submit" class="btn btn-sm btn-primary">Guardar</button>

@@ -24,7 +24,7 @@
                     <div class="card-body">
                         <form method="POST" action="{{ route('muro.store', $aula) }}" data-enviando="Publicando...">
                             @csrf
-                            <textarea class="form-control mb-2 @error('texto') is-invalid @enderror" name="texto" rows="3" maxlength="5000"
+                            <textarea class="form-control mb-2 @error('texto') is-invalid @enderror" name="texto" data-editor="simple"
                                       placeholder="{{ $esDocente ? 'Escribí un aviso para tus alumnos...' : 'Compartí algo con tu curso...' }}">{{ old('texto') }}</textarea>
                             @error('texto')<div class="invalid-feedback d-block mb-2">{{ $message }}</div>@enderror
                             <div class="d-flex justify-content-between align-items-center">

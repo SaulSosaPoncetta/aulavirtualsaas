@@ -35,12 +35,7 @@
             @if ($clase->contenido)
                 <div class="card mb-4">
                     <div class="card-body p-4 contenido-clase">
-                        {{-- Texto escapado, con saltos de línea y enlaces clickeables --}}
-                        {!! nl2br(preg_replace(
-                            '~(https?://[^\s<]+)~',
-                            '<a href="$1" target="_blank" rel="noopener">$1</a>',
-                            e($clase->contenido)
-                        )) !!}
+                        @include('partials._contenido', ['texto' => $clase->contenido])
                     </div>
                 </div>
             @endif

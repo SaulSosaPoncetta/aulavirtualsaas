@@ -31,9 +31,9 @@
                         <div>
                             <label for="consigna" class="form-label">Consigna</label>
                             <textarea class="form-control @error('consigna') is-invalid @enderror" id="consigna" name="consigna"
-                                      rows="12" maxlength="60000"
-                                      placeholder="Qué tienen que hacer, cómo entregarlo, criterios de evaluación...">{{ old('consigna', $tarea->consigna) }}</textarea>
-                            @error('consigna')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                      data-editor="completo"
+                                      placeholder="Qué tienen que hacer, cómo entregarlo, criterios de evaluación...">{{ old('consigna', \App\Services\HtmlSeguro::paraEditor($tarea->consigna)) }}</textarea>
+                            @error('consigna')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                 </div>

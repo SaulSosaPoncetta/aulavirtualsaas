@@ -9,6 +9,7 @@ use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
 use App\Http\Controllers\CoDocenteController;
 use App\Http\Controllers\DuplicarAulaController;
+use App\Http\Controllers\EditorController;
 use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\ImportarAlumnosController;
@@ -63,6 +64,9 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificado::class, VerificarAbono::class])->group(function () {
     Route::get('/verificar-email', [VerificacionEmailController::class, 'aviso'])->name('verification.notice');
     Route::post('/verificar-email/reenviar', [VerificacionEmailController::class, 'reenviar'])->middleware('throttle:3,1')->name('verification.send');
+
+    // Imágenes del editor de texto
+    Route::post('/editor/imagen', [EditorController::class, 'imagen'])->middleware('throttle:30,1')->name('editor.imagen');
 
     // Agenda
     Route::get('/pendientes', [AgendaController::class, 'pendientes'])->name('agenda.pendientes');

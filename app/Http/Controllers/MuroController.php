@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Aula;
 use App\Models\Comentario;
 use App\Models\Publicacion;
+use App\Services\HtmlSeguro;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +50,7 @@ class MuroController extends Controller
         abort_unless($aula->puedeEditar($user) || ($aula->alumnos_publican && $aula->esAlumno($user)), 403);
         abort_if($aula->estado === 'archivada', 422, 'El aula está archivada.');
 
-        $datos = $this->validarTexto($request, 5000);
+        $datos = $this->validarHtml($request);
 
         $aula->publicaciones()->create([
             'user_id' => $user->id,
@@ -64,7 +65,7 @@ class MuroController extends Controller
     {
         abort_unless($publicacion->user_id == $request->user()->id, 403, 'Solo el autor puede editar la publicación.');
 
-        $datos = $this->validarTexto($request, 5000);
+        $datos = $this->validarHtml($request);
         $publicacion->update(['texto' => $datos['texto']]);
 
         return redirect()->to(route('muro.index', $publicacion->aula_id) . '#pub' . $publicacion->id)
@@ -117,6 +118,20 @@ class MuroController extends Controller
         $comentario->delete();
 
         return redirect()->to(route('muro.index', $aula) . '#pub' . $pubId)->with('exito', 'Comentario eliminado.');
+    }
+
+    /** Publicaciones del muro: HTML del editor, limpio. */
+    protected function validarHtml(Request $request): array
+    {
+        $request->validate(['texto' => 'required|string|max:30000'], ['texto.required' => 'Escribí algo antes de publicar.']);
+
+        $limpio = HtmlSeguro::limpiar($request->texto);
+
+        if ($limpio === null) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['texto' => 'Escribí algo antes de publicar.']);
+        }
+
+        return ['texto' => $limpio];
     }
 
     protected function validarTexto(Request $request, int $max): array

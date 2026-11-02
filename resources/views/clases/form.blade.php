@@ -31,10 +31,10 @@
                         <div>
                             <label for="contenido" class="form-label">Contenido</label>
                             <textarea class="form-control @error('contenido') is-invalid @enderror" id="contenido" name="contenido"
-                                      rows="12" maxlength="60000"
-                                      placeholder="Explicación, consignas, lecturas...">{{ old('contenido', $clase->contenido) }}</textarea>
-                            @error('contenido')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Los saltos de línea se respetan. Los enlaces que pegues en el texto se vuelven clickeables.</div>
+                                      data-editor="completo"
+                                      placeholder="Explicación, consignas, lecturas...">{{ old('contenido', \App\Services\HtmlSeguro::paraEditor($clase->contenido)) }}</textarea>
+                            @error('contenido')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <div class="form-text">Podés usar títulos, negrita, listas, enlaces e imágenes (botón de imagen o pegándola).</div>
                         </div>
                     </div>
                 </div>

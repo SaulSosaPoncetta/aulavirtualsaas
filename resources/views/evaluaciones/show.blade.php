@@ -46,7 +46,7 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <h2 class="h6 fw-bold mb-2">Instrucciones</h2>
-                        <div class="small">@include('partials._texto', ['texto' => $evaluacion->instrucciones])</div>
+                        <div class="small">@include('partials._contenido', ['texto' => $evaluacion->instrucciones])</div>
                     </div>
                 </div>
             @endif

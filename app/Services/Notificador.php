@@ -59,7 +59,7 @@ class Notificador
         return [
             'tipo'   => $tipo,
             'titulo' => $titulo,
-            'texto'  => Str::limit($texto, 200),
+            'texto'  => HtmlSeguro::aTexto($texto, 200),
             'url'    => $url,
             'icono'  => $icono,
             'aula'   => $aula?->nombre,

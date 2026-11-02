@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Archivo;
 use App\Models\Aula;
 use App\Models\Tarea;
+use App\Services\HtmlSeguro;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -146,7 +147,7 @@ class TareaController extends Controller
         $datos = $request->validate([
             'titulo'            => 'required|string|max:200',
             'unidad_id'         => 'nullable|integer|exists:unidades,id,aula_id,' . $aula->id,
-            'consigna'          => 'nullable|string|max:60000',
+            'consigna'          => 'nullable|string|max:200000',
             'fecha_publicacion' => 'nullable|date',
             'fecha_limite'      => 'nullable|date',
             'puntaje_maximo'    => 'required|numeric|min:1|max:100',
@@ -177,7 +178,7 @@ class TareaController extends Controller
         return [
             'titulo'            => $datos['titulo'],
             'unidad_id'         => $datos['unidad_id'] ?? null,
-            'consigna'          => $datos['consigna'] ?? null,
+            'consigna'          => HtmlSeguro::limpiar($datos['consigna'] ?? null),
             'fecha_publicacion' => $publicacion,
             'fecha_limite'      => $limite,
             'puntaje_maximo'    => $datos['puntaje_maximo'],

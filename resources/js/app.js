@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as bootstrap from 'bootstrap';
+import './editor';
 
 // ============================================================
 // Axios (peticiones AJAX con token CSRF)

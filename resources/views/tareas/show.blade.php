@@ -53,7 +53,7 @@
                 <div class="card-body p-4">
                     <h2 class="h6 fw-bold mb-3">Consigna</h2>
                     @if ($tarea->consigna)
-                        <div class="contenido-clase">@include('partials._texto', ['texto' => $tarea->consigna])</div>
+                        <div class="contenido-clase">@include('partials._contenido', ['texto' => $tarea->consigna])</div>
                     @else
                         <p class="text-muted mb-0">Sin consigna escrita{{ $tarea->archivos->isNotEmpty() ? ': revisá los archivos adjuntos.' : '.' }}</p>
                     @endif

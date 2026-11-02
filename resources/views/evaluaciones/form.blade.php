@@ -42,9 +42,9 @@
                         <div>
                             <label for="instrucciones" class="form-label">Instrucciones para el alumno</label>
                             <textarea class="form-control @error('instrucciones') is-invalid @enderror" id="instrucciones" name="instrucciones"
-                                      rows="6" maxlength="10000"
-                                      placeholder="Qué temas entran, si pueden usar calculadora, etc.">{{ old('instrucciones', $evaluacion->instrucciones) }}</textarea>
-                            @error('instrucciones')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                      data-editor="completo"
+                                      placeholder="Qué temas entran, si pueden usar calculadora, etc.">{{ old('instrucciones', \App\Services\HtmlSeguro::paraEditor($evaluacion->instrucciones)) }}</textarea>
+                            @error('instrucciones')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Aula;
 use App\Models\Evaluacion;
 use App\Models\Intento;
+use App\Services\HtmlSeguro;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -141,7 +142,7 @@ class EvaluacionController extends Controller
         $datos = $request->validate([
             'titulo'              => 'required|string|max:200',
             'unidad_id'           => 'nullable|integer|exists:unidades,id,aula_id,' . $aula->id,
-            'instrucciones'       => 'nullable|string|max:10000',
+            'instrucciones'       => 'nullable|string|max:60000',
             'fecha_publicacion'   => 'nullable|date',
             'fecha_cierre'        => 'nullable|date',
             'duracion_minutos'    => 'nullable|integer|min:1|max:600',
@@ -169,7 +170,7 @@ class EvaluacionController extends Controller
         return [
             'titulo'              => $datos['titulo'],
             'unidad_id'           => $datos['unidad_id'] ?? null,
-            'instrucciones'       => $datos['instrucciones'] ?? null,
+            'instrucciones'       => HtmlSeguro::limpiar($datos['instrucciones'] ?? null),
             'fecha_publicacion'   => $apertura,
             'fecha_cierre'        => $cierre,
             'duracion_minutos'    => $datos['duracion_minutos'] ?? null,

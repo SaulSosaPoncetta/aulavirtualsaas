@@ -116,7 +116,7 @@
                                 {{ $ultimoAviso->fijada ? 'Aviso fijado' : 'Último en el muro' }} ·
                                 {{ $ultimoAviso->autor?->nombre_completo }} · {{ $ultimoAviso->created_at->format('d/m H:i') }}
                             </div>
-                            <div class="text-truncate-3">{{ \Illuminate\Support\Str::limit($ultimoAviso->texto, 280) }}</div>
+                            <div class="text-truncate-3">{{ \App\Services\HtmlSeguro::aTexto($ultimoAviso->texto, 280) }}</div>
                         </div>
                         <i class="bi bi-chevron-right text-muted"></i>
                     </div>
