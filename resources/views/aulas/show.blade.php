@@ -297,17 +297,68 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="h6 fw-bold mb-3"><i class="bi bi-person-workspace me-1"></i>Docentes</h2>
-                    <ul class="list-unstyled mb-0">
-                        @foreach ($docentes as $d)
-                            <li class="d-flex align-items-center mb-2">
-                                <i class="bi bi-person-circle fs-5 text-primary me-2"></i>
-                                <span>{{ $d->nombre_completo }}</span>
-                                @if ($d->id == $aula->docente_id)
-                                    <span class="badge bg-light text-dark ms-auto">Titular</span>
+                    @foreach ($docentes as $d)
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            @include('partials._avatar', ['u' => $d, 'tam' => 32, 'docente' => true])
+                            <span class="flex-grow-1 text-truncate">{{ $d->nombre_completo }}</span>
+                            @if ($d->id == $aula->docente_id)
+                                <span class="badge bg-light text-dark">Titular</span>
+                            @else
+                                <span class="badge bg-light text-muted">Co-docente</span>
+                                @if ($esTitular)
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-label="Opciones"><i class="bi bi-three-dots-vertical"></i></button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <form method="POST" action="{{ route('codocentes.titular', [$aula, $d]) }}"
+                                                      data-confirmar="¿Pasarle la titularidad a {{ $d->nombre_completo }}? Vos vas a quedar como co-docente.">
+                                                    @csrf @method('PATCH')
+                                                    <button type="submit" class="dropdown-item"><i class="bi bi-arrow-left-right me-2"></i>Hacer titular</button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form method="POST" action="{{ route('codocentes.quitar', [$aula, $d]) }}"
+                                                      data-confirmar="¿Quitar a {{ $d->nombre_completo }} como co-docente?">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-person-dash me-2"></i>Quitar del aula</button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 @endif
-                            </li>
+                            @endif
+                        </div>
+                    @endforeach
+
+                    @if ($esTitular)
+                        @foreach ($invitaciones as $inv)
+                            <div class="d-flex align-items-center gap-2 mb-2 small text-muted">
+                                <i class="bi bi-envelope-paper"></i>
+                                <span class="flex-grow-1 text-truncate" title="Invitación pendiente, vence el {{ $inv->vence_at->format('d/m') }}">{{ $inv->email }}</span>
+                                <span class="badge bg-warning text-dark">Invitado</span>
+                                <form method="POST" action="{{ route('codocentes.cancelar', $inv) }}" data-confirmar="¿Cancelar la invitación a {{ $inv->email }}?">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Cancelar invitación"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            </div>
                         @endforeach
-                    </ul>
+
+                        <form method="POST" action="{{ route('codocentes.invitar', $aula) }}" class="mt-3">
+                            @csrf
+                            <label for="emailCodocente" class="form-label small mb-1">Invitar co-docente</label>
+                            <div class="input-group input-group-sm">
+                                <input type="email" class="form-control" id="emailCodocente" name="email" placeholder="email@docente.com" required maxlength="150">
+                                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-send"></i></button>
+                            </div>
+                            <div class="form-text">Le llega un email para aceptar. Comparten el aula y pueden publicar y corregir.</div>
+                        </form>
+                    @elseif ($puedeEditar && $aula->esMiembro(auth()->user()))
+                        <form method="POST" action="{{ route('codocentes.dejar', $aula) }}" class="mt-2"
+                              data-confirmar="¿Dejar de ser co-docente de esta aula?">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-box-arrow-left me-1"></i>Dejar de ser co-docente</button>
+                        </form>
+                    @endif
                 </div>
             </div>
 

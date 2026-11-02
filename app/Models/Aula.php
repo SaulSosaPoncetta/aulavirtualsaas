@@ -91,6 +91,11 @@ class Aula extends Model
         return $this->hasMany(Publicacion::class);
     }
 
+    public function invitaciones()
+    {
+        return $this->hasMany(InvitacionAula::class);
+    }
+
     public function docentes()
     {
         return $this->miembros()->wherePivot('rol', 'docente')->wherePivot('estado', 'activo');

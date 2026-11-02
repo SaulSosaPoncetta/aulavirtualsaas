@@ -53,7 +53,12 @@ class AulaController extends Controller
             }
         }
 
-        return view('aulas.index', compact('aulas', 'roles', 'estado', 'resumen'));
+        // Invitaciones a co-docente pendientes para su email
+        $invitaciones = $user->email
+            ? \App\Models\InvitacionAula::vigentes()->with(['aula', 'invitador'])->where('email', mb_strtolower($user->email))->get()
+            : collect();
+
+        return view('aulas.index', compact('aulas', 'roles', 'estado', 'resumen', 'invitaciones'));
     }
 
     // ===================== Alta =====================
@@ -212,11 +217,13 @@ class AulaController extends Controller
         }
 
         $docentes = $aula->docentes()->orderBy('apellido')->orderBy('name')->get();
+        $esTitular    = $aula->docente_id == $user->id || $user->esSuperadmin();
+        $invitaciones = $esTitular ? $aula->invitaciones()->vigentes()->latest()->get() : collect();
         $alumnos  = $aula->alumnos()->orderBy('apellido')->orderBy('name')->get();
 
         return view('aulas.show', compact(
             'aula', 'unidades', 'clasesPorUnidad', 'tareasPorUnidad', 'evaluacionesPorUnidad',
-            'misEntregas', 'misIntentos', 'rindieron', 'pendientes', 'ultimoAviso', 'nuevosMuro', 'alumnosInstitucion', 'puedeEscribir',
+            'misEntregas', 'misIntentos', 'rindieron', 'pendientes', 'ultimoAviso', 'nuevosMuro', 'alumnosInstitucion', 'puedeEscribir', 'esTitular', 'invitaciones',
             'docentes', 'alumnos', 'puedeEditar'
         ));
     }

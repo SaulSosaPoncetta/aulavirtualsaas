@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
+use App\Http\Controllers\CoDocenteController;
 use App\Http\Controllers\DuplicarAulaController;
 use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\EvaluacionController;
@@ -95,6 +96,15 @@ Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificad
     Route::post('/aulas/{aula}/alumnos', [AulaController::class, 'agregarAlumnos'])->name('aulas.alumnos.agregar');
     Route::get('/aulas/{aula}/duplicar', [DuplicarAulaController::class, 'create'])->name('aulas.duplicar');
     Route::post('/aulas/{aula}/duplicar', [DuplicarAulaController::class, 'store'])->middleware('throttle:10,1')->name('aulas.duplicar.store');
+
+    // Co-docentes
+    Route::post('/aulas/{aula}/codocentes', [CoDocenteController::class, 'invitar'])->middleware('throttle:20,1')->name('codocentes.invitar');
+    Route::delete('/invitaciones/{invitacion}', [CoDocenteController::class, 'cancelar'])->name('codocentes.cancelar');
+    Route::delete('/aulas/{aula}/codocentes/{user}', [CoDocenteController::class, 'quitar'])->name('codocentes.quitar');
+    Route::patch('/aulas/{aula}/codocentes/{user}/titular', [CoDocenteController::class, 'hacerTitular'])->name('codocentes.titular');
+    Route::post('/aulas/{aula}/dejar', [CoDocenteController::class, 'dejar'])->name('codocentes.dejar');
+    Route::get('/invitacion/{token}', [CoDocenteController::class, 'ver'])->name('invitaciones.ver');
+    Route::post('/invitacion/{token}', [CoDocenteController::class, 'responder'])->middleware('throttle:10,1')->name('invitaciones.responder');
 
     // Unidades del aula
     Route::post('/aulas/{aula}/unidades', [UnidadController::class, 'store'])->name('unidades.store');

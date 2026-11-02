@@ -18,6 +18,17 @@
         </div>
     </div>
 
+    @foreach ($invitaciones as $inv)
+        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2">
+            <i class="bi bi-person-plus fs-4"></i>
+            <div class="flex-grow-1">
+                <strong>{{ $inv->invitador?->nombre_completo ?? 'Un docente' }}</strong> te invitó a ser co-docente de
+                <strong>{{ $inv->aula->nombre }}</strong>.
+            </div>
+            <a href="{{ route('invitaciones.ver', $inv->token) }}" class="btn btn-sm btn-primary">Ver invitación</a>
+        </div>
+    @endforeach
+
     @if (array_sum($resumen))
         <a href="{{ route('agenda.pendientes') }}" class="card mb-4 text-decoration-none text-reset border-primary-subtle resumen-pendientes">
             <div class="card-body d-flex flex-wrap align-items-center gap-3">
