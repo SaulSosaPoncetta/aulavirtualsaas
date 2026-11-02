@@ -35,8 +35,46 @@
                 @endauth
             </ul>
 
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-lg-center">
                 @auth
+                    @php
+                        $sinLeer = auth()->user()->unreadNotifications()->count();
+                        $ultimas = auth()->user()->notifications()->take(8)->get();
+                    @endphp
+                    <li class="nav-item dropdown me-lg-1">
+                        <a class="nav-link position-relative px-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notificaciones">
+                            <i class="bi bi-bell fs-5"></i>
+                            @if ($sinLeer)
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark campanita-contador">
+                                    {{ $sinLeer > 9 ? '9+' : $sinLeer }}
+                                </span>
+                            @endif
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end p-0 campanita-menu">
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                <strong>Notificaciones</strong>
+                                @if ($sinLeer)
+                                    <form method="POST" action="{{ route('notificaciones.leer') }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-link btn-sm p-0">Marcar leídas</button>
+                                    </form>
+                                @endif
+                            </div>
+                            @forelse ($ultimas as $n)
+                                <a href="{{ route('notificaciones.ir', $n->id) }}" class="dropdown-item d-flex gap-2 py-2 {{ $n->read_at ? '' : 'notificacion-nueva' }}">
+                                    <i class="bi {{ $n->data['icono'] ?? 'bi-bell' }} text-primary mt-1"></i>
+                                    <div class="min-w-0">
+                                        <div class="small fw-semibold text-truncate">{{ $n->data['titulo'] ?? 'Aviso' }}</div>
+                                        <div class="small text-muted text-wrap">{{ \Illuminate\Support\Str::limit($n->data['texto'] ?? '', 80) }}</div>
+                                        <div class="text-muted" style="font-size: .75rem">{{ $n->created_at->locale('es')->diffForHumans() }}</div>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="text-center text-muted small py-4">No tenés notificaciones.</div>
+                            @endforelse
+                            <a href="{{ route('notificaciones.index') }}" class="dropdown-item text-center small border-top py-2">Ver todas</a>
+                        </div>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">

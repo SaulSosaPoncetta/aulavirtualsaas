@@ -15,6 +15,7 @@ use App\Http\Controllers\LibretaController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\MuroController;
+use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\TareaController;
@@ -57,6 +58,12 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificado::class, VerificarAbono::class])->group(function () {
     Route::get('/verificar-email', [VerificacionEmailController::class, 'aviso'])->name('verification.notice');
     Route::post('/verificar-email/reenviar', [VerificacionEmailController::class, 'reenviar'])->middleware('throttle:3,1')->name('verification.send');
+
+    // Notificaciones
+    Route::get('/notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::get('/notificaciones/{id}/ir', [NotificacionController::class, 'ir'])->name('notificaciones.ir');
+    Route::post('/notificaciones/leer', [NotificacionController::class, 'leerTodas'])->name('notificaciones.leer');
+    Route::patch('/notificaciones/preferencias', [NotificacionController::class, 'preferencias'])->name('notificaciones.preferencias');
 
     // Mi perfil
     Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');

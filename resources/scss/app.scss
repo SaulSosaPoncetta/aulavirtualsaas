@@ -567,3 +567,31 @@ main {
     font-size: 2.6rem;
     font-weight: 700;
 }
+
+// Notificaciones
+.campanita-menu {
+    width: 340px;
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.campanita-contador {
+    font-size: .65rem;
+}
+
+.notificacion-nueva {
+    background-color: rgba($teal-claro, .08);
+}
+
+.punto-nuevo {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: $teal-claro;
+    align-self: center;
+    flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+    .campanita-menu { width: 92vw; }
+}
