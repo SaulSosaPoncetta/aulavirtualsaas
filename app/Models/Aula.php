@@ -96,6 +96,16 @@ class Aula extends Model
         return $this->hasMany(InvitacionAula::class);
     }
 
+    public function periodos()
+    {
+        return $this->hasMany(Periodo::class)->orderBy('orden')->orderBy('desde');
+    }
+
+    public function columnasLibreta()
+    {
+        return $this->hasMany(ColumnaLibreta::class)->orderByRaw('CASE WHEN fecha IS NULL THEN 1 ELSE 0 END')->orderBy('fecha')->orderBy('id');
+    }
+
     public function docentes()
     {
         return $this->miembros()->wherePivot('rol', 'docente')->wherePivot('estado', 'activo');

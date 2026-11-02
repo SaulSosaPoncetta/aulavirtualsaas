@@ -21,6 +21,7 @@ class VerificarAbono
         'codocentes.quitar', 'codocentes.dejar', 'codocentes.titular', 'codocentes.cancelar',
         'aulas.alumnos.password', // ayudar a un alumno a ingresar siempre está permitido
         'entregas.corregir', 'intentos.calificar', 'intentos.finalizar',
+        'libreta.*', // cerrar notas y armar boletines siempre está permitido
         'abonos.*', 'instituciones.*',
     ];
 

@@ -16,6 +16,7 @@ use App\Http\Controllers\ImportarAlumnosController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\IntentoController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LibretaConfigController;
 use App\Http\Controllers\LibretaController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PerfilController;
@@ -168,6 +169,20 @@ Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificad
     // Libreta de calificaciones
     Route::get('/aulas/{aula}/calificaciones', [LibretaController::class, 'index'])->name('libreta.index');
     Route::get('/aulas/{aula}/calificaciones/excel', [LibretaController::class, 'exportar'])->name('libreta.exportar');
+    Route::get('/aulas/{aula}/calificaciones/boletin', [LibretaController::class, 'boletin'])->name('libreta.boletin');
+    Route::post('/aulas/{aula}/calificaciones', [LibretaController::class, 'guardar'])->name('libreta.guardar');
+    Route::post('/aulas/{aula}/calificaciones/observacion', [LibretaController::class, 'observacion'])->name('libreta.observacion');
+
+    // Configuración de la libreta: períodos, columnas manuales y pesos
+    Route::get('/aulas/{aula}/calificaciones/configurar', [LibretaConfigController::class, 'edit'])->name('libreta.configurar');
+    Route::post('/aulas/{aula}/periodos/plantilla', [LibretaConfigController::class, 'plantilla'])->name('libreta.plantilla');
+    Route::post('/aulas/{aula}/periodos', [LibretaConfigController::class, 'storePeriodo'])->name('libreta.periodos.store');
+    Route::put('/aulas/{aula}/periodos/{periodo}', [LibretaConfigController::class, 'updatePeriodo'])->name('libreta.periodos.update');
+    Route::delete('/aulas/{aula}/periodos/{periodo}', [LibretaConfigController::class, 'destroyPeriodo'])->name('libreta.periodos.destroy');
+    Route::post('/aulas/{aula}/columnas-libreta', [LibretaConfigController::class, 'storeColumna'])->name('libreta.columnas.store');
+    Route::put('/aulas/{aula}/columnas-libreta/{columna}', [LibretaConfigController::class, 'updateColumna'])->name('libreta.columnas.update');
+    Route::delete('/aulas/{aula}/columnas-libreta/{columna}', [LibretaConfigController::class, 'destroyColumna'])->name('libreta.columnas.destroy');
+    Route::put('/aulas/{aula}/calificaciones/pesos', [LibretaConfigController::class, 'pesos'])->name('libreta.pesos');
 
     // Muro del aula
     Route::get('/aulas/{aula}/muro', [MuroController::class, 'index'])->name('muro.index');
