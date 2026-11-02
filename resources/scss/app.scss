@@ -493,3 +493,31 @@ main {
     .landing-hero { padding: 3rem 0 4rem; }
     .landing-mock { transform: none; }
 }
+
+// Botón Mercado Pago
+.btn-mp {
+    background-color: #009EE3;
+    border-color: #009EE3;
+    color: #fff;
+    font-weight: 600;
+
+    &:hover, &:focus {
+        background-color: #0086c3;
+        border-color: #0086c3;
+        color: #fff;
+    }
+}
+
+// Páginas legales
+.legal {
+    line-height: 1.7;
+
+    h2 { color: $teal-oscuro; }
+    li { margin-bottom: .35rem; }
+}
+
+.login-legales {
+    color: $secondary;
+
+    a { color: $secondary; }
+}

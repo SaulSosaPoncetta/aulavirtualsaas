@@ -48,7 +48,9 @@ class RegistroController extends Controller
             'dni'      => [$esAlumno ? 'required_without:email' : 'nullable', 'nullable', 'digits_between:6,10', 'unique:users,dni'],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
             'codigo'   => 'nullable|string|max:10',
+            'acepto'   => 'accepted',
         ], [
+            'acepto.accepted'        => 'Para crear la cuenta tenés que aceptar los Términos y la Política de privacidad.',
             'email.required_without' => 'Ingresá tu email o tu DNI (al menos uno de los dos).',
             'dni.required_without'   => 'Ingresá tu DNI o tu email (al menos uno de los dos).',
             'email.unique'           => 'Ya hay una cuenta con ese email. Probá ingresar o recuperar la contraseña.',
@@ -83,6 +85,7 @@ class RegistroController extends Controller
                 'dni'      => $datos['dni'],
                 'password' => $datos['password'],
                 'activo'   => true,
+                'terminos_aceptados_at' => Carbon::now('America/Argentina/Buenos_Aires'),
             ]);
 
             if ($datos['tipo'] === 'institucion') {
@@ -119,6 +122,18 @@ class RegistroController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        // Si cargó email, se le manda el enlace para confirmarlo
+        if ($user->email) {
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                report($e); // si falla el envío, puede reenviarlo desde la pantalla de verificación
+            }
+
+            return redirect()->route('verification.notice')
+                ->with('exito', "¡Cuenta creada! Te enviamos un email a {$user->email} para confirmarlo.");
+        }
 
         if ($institucion) {
             return redirect()->route('instituciones.show', $institucion)

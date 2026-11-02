@@ -27,7 +27,11 @@
             </div>
         </div>
 
-        <p class="text-center text-muted small mt-4 mb-0">Un sistema de <strong>MiGestión</strong></p>
+        <p class="text-center small mt-4 mb-0 login-legales">
+            Un sistema de <strong>{{ config('empresa.marca') }}</strong> ·
+            <a href="{{ route('legal.terminos') }}">Términos</a> ·
+            <a href="{{ route('legal.privacidad') }}">Privacidad</a>
+        </p>
     </div>
 </main>
 

@@ -127,6 +127,16 @@
             <div class="form-text">Si tu docente te pasó un código, ingresalo y quedás inscripto/a en su aula.</div>
         </div>
 
+        <div class="form-check mb-4">
+            <input class="form-check-input @error('acepto') is-invalid @enderror" type="checkbox" name="acepto" value="1" id="acepto" @checked(old('acepto'))>
+            <label class="form-check-label small" for="acepto">
+                Leí y acepto los <a href="{{ route('legal.terminos') }}" target="_blank">Términos y condiciones</a>
+                y la <a href="{{ route('legal.privacidad') }}" target="_blank">Política de privacidad</a>.
+                <span class="d-block text-muted">Si sos menor de edad, tu madre, padre o tutor tiene que estar de acuerdo.</span>
+            </label>
+            @error('acepto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+
         <button type="submit" class="btn btn-primary w-100 py-2">
             <i class="bi bi-person-plus me-1"></i> Crear cuenta
         </button>

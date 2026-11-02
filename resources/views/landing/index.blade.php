@@ -11,7 +11,7 @@
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body class="landing">
-@php($pesos = fn ($v) => '$ ' . number_format((float) $v, 0, ',', '.'))
+@php($pesos = fn ($v) => \App\Models\Plan::pesos($v))
 
 {{-- ===================== Barra superior ===================== --}}
 <nav class="navbar navbar-expand-lg landing-nav sticky-top">
@@ -286,6 +286,7 @@
                 ['¿Qué pasa si se vence el abono?', 'No se pierde nada. Las aulas quedan en modo de solo lectura: se puede ver todo el contenido y las notas, pero no publicar cosas nuevas hasta renovar.'],
                 ['¿Cómo se cuentan los docentes en el plan institucional?', 'Cada docente que se suma a la institución con el código ocupa un lugar. Los directivos o administrativos que solo administran no ocupan lugar. Podés ampliar el cupo en cualquier momento.'],
                 ['¿Necesito instalar algo?', 'No. Funciona desde el navegador de la compu, la tablet o el celular.'],
+                ['¿Qué pasa con los datos de mis alumnos?', 'Solo los ven los docentes del aula y, si corresponde, la institución. No vendemos ni compartimos datos. Podés leer nuestra Política de privacidad al pie de esta página.'],
             ] as $i => [$pregunta, $respuesta])
                 <div class="accordion-item">
                     <h3 class="accordion-header">
@@ -315,15 +316,7 @@
 </section>
 
 {{-- ===================== Pie ===================== --}}
-<footer class="landing-pie py-4">
-    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3 small">
-        <span><i class="bi bi-mortarboard-fill text-warning me-1"></i><strong>Aula Virtual</strong> · un sistema de <a href="https://www.migestion.com.ar" class="text-reset fw-semibold">MiGestión</a></span>
-        <span>
-            <a href="mailto:{{ config('abonos.contacto') }}" class="text-reset me-3"><i class="bi bi-envelope me-1"></i>{{ config('abonos.contacto') }}</a>
-            <a href="{{ route('login') }}" class="text-reset">Ingresar</a>
-        </span>
-    </div>
-</footer>
+@include('partials.pie-legal')
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

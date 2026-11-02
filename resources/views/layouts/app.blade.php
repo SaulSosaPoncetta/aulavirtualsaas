@@ -22,7 +22,11 @@
     <footer class="footer-aula py-3">
         <div class="container d-flex flex-wrap justify-content-between gap-2">
             <span>{{ config('app.name') }} &copy; {{ date('Y') }}</span>
-            <span>Un sistema de <strong>MiGestión</strong></span>
+            <span class="d-flex flex-wrap gap-3">
+                <a href="{{ route('legal.terminos') }}" class="text-reset">Términos</a>
+                <a href="{{ route('legal.privacidad') }}" class="text-reset">Privacidad</a>
+                <span>Un sistema de <strong>{{ config('empresa.marca') }}</strong></span>
+            </span>
         </div>
     </footer>
 
