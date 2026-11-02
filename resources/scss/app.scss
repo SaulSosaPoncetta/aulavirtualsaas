@@ -521,3 +521,49 @@ main {
 
     a { color: $secondary; }
 }
+
+// Avatares
+.avatar-img {
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.avatar-iniciales {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $gray-300;
+    color: $pizarra;
+    font-weight: 700;
+
+    &.avatar-docente {
+        background-color: $teal-oscuro;
+        color: #fff;
+    }
+}
+
+.navbar-aula .avatar-iniciales {
+    background-color: rgba(#fff, .25);
+    color: #fff;
+}
+
+.avatar-perfil {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+}
+
+.avatar-perfil-iniciales {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    background-color: $teal-oscuro;
+    color: #fff;
+    font-size: 2.6rem;
+    font-weight: 700;
+}

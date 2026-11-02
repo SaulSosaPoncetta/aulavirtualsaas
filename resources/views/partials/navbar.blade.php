@@ -38,9 +38,9 @@
             <ul class="navbar-nav">
                 @auth
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle me-1"></i> {{ auth()->user()->nombre_completo }}
+                            @include('partials._avatar', ['u' => auth()->user(), 'tam' => 28]) <span class="ms-1">{{ auth()->user()->nombre_completo }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
@@ -48,7 +48,7 @@
                                     {{ ucfirst(str_replace('_', ' ', auth()->user()->getRoleNames()->first() ?? '')) }}
                                 </span>
                             </li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Mi perfil</a></li>
+                            <li><a class="dropdown-item" href="{{ route('perfil.edit') }}"><i class="bi bi-person me-2"></i>Mi perfil</a></li>
                             @if (auth()->user()->esDocente())
                                 <li><a class="dropdown-item" href="{{ route('abonos.mio') }}"><i class="bi bi-credit-card me-2"></i>Mi abono</a></li>
                             @endif

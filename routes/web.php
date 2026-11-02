@@ -13,6 +13,7 @@ use App\Http\Controllers\IntentoController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LibretaController;
 use App\Http\Controllers\MercadoPagoController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\MuroController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RecursoController;
@@ -56,6 +57,12 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificado::class, VerificarAbono::class])->group(function () {
     Route::get('/verificar-email', [VerificacionEmailController::class, 'aviso'])->name('verification.notice');
     Route::post('/verificar-email/reenviar', [VerificacionEmailController::class, 'reenviar'])->middleware('throttle:3,1')->name('verification.send');
+
+    // Mi perfil
+    Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
+    Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
+    Route::post('/perfil/foto', [PerfilController::class, 'subirFoto'])->middleware('throttle:10,1')->name('perfil.foto');
+    Route::delete('/perfil/foto', [PerfilController::class, 'quitarFoto'])->name('perfil.foto.quitar');
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 

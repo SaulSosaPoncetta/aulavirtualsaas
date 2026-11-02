@@ -6,7 +6,7 @@
 <div class="card mb-3 {{ $pub->fijada ? 'border-primary' : '' }}" id="pub{{ $pub->id }}">
     <div class="card-body">
         <div class="d-flex align-items-start gap-2 mb-2">
-            <div class="avatar-muro {{ $esDeDocente ? 'avatar-docente' : '' }}">{{ mb_strtoupper(mb_substr($pub->autor?->name ?? '?', 0, 1)) }}</div>
+            @include('partials._avatar', ['u' => $pub->autor, 'tam' => 40, 'docente' => $esDeDocente])
             <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold">
                     {{ $pub->autor?->nombre_completo ?? 'Usuario eliminado' }}
@@ -71,7 +71,7 @@
         <div class="card-footer bg-light">
             @foreach ($pub->comentarios as $com)
                 <div class="d-flex gap-2 mb-2">
-                    <div class="avatar-muro avatar-chico">{{ mb_strtoupper(mb_substr($com->autor?->name ?? '?', 0, 1)) }}</div>
+                    @include('partials._avatar', ['u' => $com->autor, 'tam' => 28, 'docente' => in_array((int) $com->user_id, $idsDocentes, true)])
                     <div class="flex-grow-1 min-w-0 bg-white rounded px-2 py-1">
                         <div class="d-flex justify-content-between gap-2">
                             <span class="small fw-semibold">{{ $com->autor?->nombre_completo ?? 'Usuario eliminado' }}</span>

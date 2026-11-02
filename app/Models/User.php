@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -126,6 +127,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // ===================== Ayudas =====================
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? Storage::disk('public')->url($this->avatar) : null;
+    }
+
+    public function getInicialesAttribute(): string
+    {
+        return mb_strtoupper(mb_substr($this->name ?? '', 0, 1) . mb_substr($this->apellido ?? '', 0, 1)) ?: '?';
+    }
 
     public function getNombreCompletoAttribute(): string
     {

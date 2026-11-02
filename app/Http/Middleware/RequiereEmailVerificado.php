@@ -18,7 +18,7 @@ class RequiereEmailVerificado
 
         if ($user && $user->necesitaVerificarEmail()
             && ! $user->esSuperadmin()
-            && ! $request->routeIs('verification.*', 'logout', 'password.cambiar', 'password.actualizar')) {
+            && ! $request->routeIs('verification.*', 'logout', 'password.cambiar', 'password.actualizar', 'perfil.*')) {
             return redirect()->route('verification.notice');
         }
 
