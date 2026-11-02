@@ -80,6 +80,9 @@ Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificad
     Route::patch('/notificaciones/preferencias', [NotificacionController::class, 'preferencias'])->name('notificaciones.preferencias');
 
     // Mi perfil
+    // Ayuda: manual de uso
+    Route::view('/ayuda', 'ayuda.index')->name('ayuda');
+
     Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
     Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
     Route::post('/perfil/foto', [PerfilController::class, 'subirFoto'])->middleware('throttle:10,1')->name('perfil.foto');

@@ -51,6 +51,11 @@
                         $sinLeer = auth()->user()->unreadNotifications()->count();
                         $ultimas = auth()->user()->notifications()->take(8)->get();
                     @endphp
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {{ request()->routeIs('ayuda') ? 'active' : '' }}" href="{{ route('ayuda') }}" title="Ayuda" aria-label="Ayuda">
+                            <i class="bi bi-question-circle fs-5"></i><span class="d-lg-none ms-1">Ayuda</span>
+                        </a>
+                    </li>
                     <li class="nav-item dropdown me-lg-1">
                         <a class="nav-link position-relative px-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notificaciones">
                             <i class="bi bi-bell fs-5"></i>
@@ -108,6 +113,7 @@
                                     <i class="bi bi-key me-2"></i>Cambiar contraseña
                                 </a>
                             </li>
+                            <li><a class="dropdown-item" href="{{ route('ayuda') }}"><i class="bi bi-life-preserver me-2"></i>Ayuda</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
