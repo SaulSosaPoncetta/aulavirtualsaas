@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AbonoController;
 use App\Http\Controllers\AgendaController;
+use App\Http\Controllers\AlumnoPasswordController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
@@ -53,6 +54,7 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/recuperar-password', [RecuperarPasswordController::class, 'solicitar'])->name('password.request');
     Route::post('/recuperar-password', [RecuperarPasswordController::class, 'enviar'])->middleware('throttle:5,1')->name('password.email');
+    Route::post('/recuperar-password/dni', [RecuperarPasswordController::class, 'pedirAyuda'])->middleware('throttle:3,10')->name('password.ayuda');
     Route::get('/restablecer-password/{token}', [RecuperarPasswordController::class, 'formulario'])->name('password.reset');
     Route::post('/restablecer-password', [RecuperarPasswordController::class, 'restablecer'])->name('password.store');
 });
@@ -94,6 +96,7 @@ Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificad
     Route::patch('/aulas/{aula}/miembros/{user}/baja', [AulaController::class, 'bajaMiembro'])->name('aulas.miembros.baja');
     Route::post('/aulas/{aula}/salir', [AulaController::class, 'salir'])->name('aulas.salir');
     Route::post('/aulas/{aula}/alumnos', [AulaController::class, 'agregarAlumnos'])->name('aulas.alumnos.agregar');
+    Route::patch('/aulas/{aula}/alumnos/{alumno}/password', [AlumnoPasswordController::class, 'restablecer'])->middleware('throttle:20,1')->name('aulas.alumnos.password');
     Route::get('/aulas/{aula}/duplicar', [DuplicarAulaController::class, 'create'])->name('aulas.duplicar');
     Route::post('/aulas/{aula}/duplicar', [DuplicarAulaController::class, 'store'])->middleware('throttle:10,1')->name('aulas.duplicar.store');
 

@@ -19,6 +19,7 @@ class VerificarAbono
         'aulas.update', 'aulas.archivar', 'aulas.destroy', 'aulas.salir', 'aulas.miembros.baja',
         'aulas.duplicar.store', // el abono que importa es el del aula nueva (se controla al duplicar)
         'codocentes.quitar', 'codocentes.dejar', 'codocentes.titular', 'codocentes.cancelar',
+        'aulas.alumnos.password', // ayudar a un alumno a ingresar siempre está permitido
         'entregas.corregir', 'intentos.calificar', 'intentos.finalizar',
         'abonos.*', 'instituciones.*',
     ];

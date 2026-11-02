@@ -66,6 +66,20 @@
         </div>
     </div>
 
+    @if ($ct = session('clave_temporal'))
+        <div class="alert alert-success border-success">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <i class="bi bi-key-fill fs-2"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">Clave temporal de {{ $ct['alumno'] }}</div>
+                    <div class="small">Pasásela al alumno. Entra con <strong>{{ $ct['usuario'] }}</strong> y esta clave, y el sistema le pide elegir una nueva.
+                        <strong>Anotala ahora: no se vuelve a mostrar.</strong></div>
+                </div>
+                <span class="codigo-aula" id="claveTemporal">{{ $ct['clave'] }}</span>
+            </div>
+        </div>
+    @endif
+
     @unless ($puedeEscribir)
         <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2">
             <i class="bi bi-lock fs-5"></i>
@@ -374,7 +388,7 @@
                     </h2>
 
                     @forelse ($alumnos as $a)
-                        <div class="d-flex align-items-center py-1 border-bottom">
+                        <div class="d-flex align-items-center py-1 border-bottom" id="alumno{{ $a->id }}">
                             <i class="bi bi-person fs-5 text-muted me-2"></i>
                             <div class="flex-grow-1">
                                 <div>{{ $a->nombre_completo }}</div>
@@ -382,6 +396,15 @@
                                     <div class="small text-muted">{{ $a->email ?? ('DNI ' . $a->dni) }}</div>
                                 @endif
                             </div>
+                            @if ($puedeEditar && ! ($a->email && $a->email_verified_at))
+                                <form method="POST" action="{{ route('aulas.alumnos.password', [$aula, $a]) }}"
+                                      data-confirmar="¿Generar una clave temporal para {{ $a->nombre_completo }}? Su contraseña actual deja de funcionar.">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="btn btn-sm btn-link" data-bs-toggle="tooltip" title="Generar clave temporal (no tiene email)">
+                                        <i class="bi bi-key"></i>
+                                    </button>
+                                </form>
+                            @endif
                             @if ($puedeEditar)
                                 <form method="POST" action="{{ route('aulas.miembros.baja', [$aula, $a]) }}"
                                       data-confirmar="¿Quitar a {{ $a->nombre_completo }} del aula?">

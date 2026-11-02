@@ -24,10 +24,19 @@
         </button>
     </form>
 
-    <div class="alert alert-light border small mt-4 mb-0">
-        <i class="bi bi-info-circle me-1"></i>
-        Si te registraste solo con DNI, pedile a tu docente o a tu institución que te restablezcan la contraseña.
-    </div>
+    <hr class="my-4">
+
+    <h2 class="h6 fw-bold mb-2"><i class="bi bi-person-vcard me-1"></i>¿Entrás con tu DNI y no tenés email?</h2>
+    <p class="small text-muted">Avisamos a tus docentes para que te den una clave temporal.</p>
+    <form method="POST" action="{{ route('password.ayuda') }}" data-enviando="Avisando...">
+        @csrf
+        <div class="input-group">
+            <input type="text" class="form-control @error('dni') is-invalid @enderror" name="dni" value="{{ old('dni') }}"
+                   inputmode="numeric" maxlength="12" placeholder="Tu DNI sin puntos" required>
+            <button type="submit" class="btn btn-outline-primary">Pedir ayuda</button>
+            @error('dni')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </form>
 
     <p class="text-center small mt-3 mb-0"><a href="{{ route('login') }}">Volver a ingresar</a></p>
 @endsection

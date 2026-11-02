@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Notificador;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -29,6 +31,48 @@ class RecuperarPasswordController extends Controller
 
         // Mismo mensaje exista o no la cuenta (no revela qué emails están registrados)
         return back()->with('exito', 'Si el email está registrado, te enviamos un enlace para restablecer la contraseña. Revisá también la carpeta de spam.');
+    }
+
+    /**
+     * Alumno sin email: ingresa su DNI y se avisa a los docentes de sus aulas
+     * para que le generen una clave temporal. No revela si el DNI existe.
+     */
+    public function pedirAyuda(Request $request, Notificador $notificador)
+    {
+        $request->merge(['dni' => preg_replace('/\D/', '', (string) $request->dni)]);
+        $request->validate(['dni' => 'required|digits_between:6,10'], [], ['dni' => 'DNI']);
+
+        $alumno = User::where('dni', $request->dni)->first();
+
+        // Solo para quien no puede recuperarla por email
+        if ($alumno && $alumno->activo && ! ($alumno->email && $alumno->email_verified_at)) {
+            $aulas = $alumno->aulasComoAlumno()->where('aulas.estado', 'activa')->get();
+
+            foreach ($aulas as $aula) {
+                $notificador->enviar($aula->docentes()->get(), [
+                    'tipo'   => 'ayuda',
+                    'titulo' => 'Un alumno olvidó su contraseña',
+                    'texto'  => $alumno->nombre_completo . ' (DNI ' . $alumno->dni . ') pidió ayuda para ingresar. Generale una clave temporal desde la lista de alumnos.',
+                    'url'    => route('aulas.show', $aula) . '#alumno' . $alumno->id,
+                    'icono'  => 'bi-key',
+                    'aula'   => $aula->nombre,
+                ], false, 0);
+            }
+
+            // Si es alumno de una institución, también a sus administradores
+            foreach ($alumno->instituciones()->wherePivot('rol', 'alumno')->get() as $inst) {
+                $notificador->enviar($inst->administradores()->wherePivot('activo', true)->get(), [
+                    'tipo'   => 'ayuda',
+                    'titulo' => 'Un alumno olvidó su contraseña',
+                    'texto'  => $alumno->nombre_completo . ' (DNI ' . $alumno->dni . ') pidió ayuda para ingresar.',
+                    'url'    => route('instituciones.show', ['institucion' => $inst, 'buscar' => $alumno->dni]),
+                    'icono'  => 'bi-key',
+                    'aula'   => $inst->nombre,
+                ], false, 0);
+            }
+        }
+
+        return back()->with('exito', 'Listo. Si el DNI está registrado, les avisamos a tus docentes: pediles en la próxima clase tu clave temporal.');
     }
 
     public function formulario(Request $request, string $token)
