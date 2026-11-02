@@ -17,6 +17,7 @@ class VerificarAbono
     protected array $permitidas = [
         'logout', 'password.*',
         'aulas.update', 'aulas.archivar', 'aulas.destroy', 'aulas.salir', 'aulas.miembros.baja',
+        'aulas.duplicar.store', // el abono que importa es el del aula nueva (se controla al duplicar)
         'entregas.corregir', 'intentos.calificar', 'intentos.finalizar',
         'abonos.*', 'instituciones.*',
     ];

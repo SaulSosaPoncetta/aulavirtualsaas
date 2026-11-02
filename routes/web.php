@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\ClaseController;
+use App\Http\Controllers\DuplicarAulaController;
 use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\ImportarAlumnosController;
@@ -92,6 +93,8 @@ Route::middleware(['auth', RequiereCambioPassword::class, RequiereEmailVerificad
     Route::patch('/aulas/{aula}/miembros/{user}/baja', [AulaController::class, 'bajaMiembro'])->name('aulas.miembros.baja');
     Route::post('/aulas/{aula}/salir', [AulaController::class, 'salir'])->name('aulas.salir');
     Route::post('/aulas/{aula}/alumnos', [AulaController::class, 'agregarAlumnos'])->name('aulas.alumnos.agregar');
+    Route::get('/aulas/{aula}/duplicar', [DuplicarAulaController::class, 'create'])->name('aulas.duplicar');
+    Route::post('/aulas/{aula}/duplicar', [DuplicarAulaController::class, 'store'])->middleware('throttle:10,1')->name('aulas.duplicar.store');
 
     // Unidades del aula
     Route::post('/aulas/{aula}/unidades', [UnidadController::class, 'store'])->name('unidades.store');

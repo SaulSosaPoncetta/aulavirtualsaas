@@ -38,6 +38,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="{{ route('aulas.edit', $aula) }}"><i class="bi bi-pencil me-2"></i>Editar datos</a></li>
+                        <li><a class="dropdown-item" href="{{ route('aulas.duplicar', $aula) }}"><i class="bi bi-copy me-2"></i>Duplicar para otro curso o ciclo</a></li>
                         <li>
                             <form method="POST" action="{{ route('aulas.archivar', $aula) }}"
                                   data-confirmar="{{ $aula->estado === 'activa' ? '¿Archivar esta aula? Va a quedar en solo lectura en Archivadas.' : '¿Volver a activar esta aula?' }}">
